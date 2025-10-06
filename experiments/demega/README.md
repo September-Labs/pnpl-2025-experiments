@@ -2,6 +2,8 @@
 
 State-of-the-art MEG phoneme classification using DeBERTa-style attention mechanism and class-balanced focal loss.
 
+**Authors:** Aleksandr Smechov, Ihor Stepanov, Alexander Yavorskyi, and Shivam Chaudhary
+
 ## Key Features
 
 - **DeBERTa Attention**: Disentangled self-attention mechanism adapted for MEG signals
@@ -193,7 +195,7 @@ If you use this code in your research, please cite:
 ```bibtex
 @software{demega_2025,
   title={DeMEGa: Disentangled MEG Attention for Phoneme Classification},
-  author={Your Name},
+  author={Smechov, Aleksandr and Stepanov, Ihor and Yavorskyi, Alexander and Chaudhary, Shivam},
   year={2025},
   url={https://github.com/September-Labs/pnpl-2025-experiments}
 }
@@ -212,6 +214,13 @@ This project is licensed under CC BY-NC 4.0 - see the LICENSE file for details.
 ## Contributing
 
 Contributions are welcome! Please feel free to submit issues or pull requests.
+
+## Authors
+
+- **Aleksandr Smechov**
+- **Ihor Stepanov**
+- **Alexander Yavorskyi**
+- **Shivam Chaudhary**
 
 ## Contact
 

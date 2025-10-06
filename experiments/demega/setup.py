@@ -12,7 +12,7 @@ long_description = (this_directory / "README.md").read_text()
 setup(
     name="demega-classifier",
     version="0.1.0",
-    author="September Labs",
+    author="Aleksandr Smechov, Ihor Stepanov, Alexander Yavorskyi, Shivam Chaudhary",
     description="DeMEGa: Disentangled MEG attention for phoneme classification with focal loss",
     long_description=long_description,
     long_description_content_type="text/markdown",
