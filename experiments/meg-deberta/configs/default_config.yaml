@@ -1,0 +1,118 @@
+# MEG-DeBERTa Phoneme Classifier Configuration
+# Features DeBERTa attention, class-balanced focal loss, and pre-layer normalization
+
+data:
+  data_path: "${DATA_PATH}"  # Set via environment variable or --data_path argument
+  tmin: 0.0
+  tmax: 0.5  # 0.5 seconds for 125 time points at 250Hz
+  use_subset: false  # Set to false for full training data
+  use_signal_averaging: true
+  grouped_samples: 100  # Group average for better SNR
+  shuffle_seed: 777  # For reproducible shuffling in GroupedDataset
+
+training:
+  max_epochs: 5  # Adjust based on your needs
+  batch_size: 512
+  learning_rate: 0.0003
+  num_workers: 8  # Adjust based on your system
+  seed: 777
+  devices: 1
+  accelerator: "gpu"
+  strategy: "auto"
+  use_weighted_sampling: false
+  gradient_clip_val: 1.0
+  accumulate_grad_batches: 1
+  use_early_stopping: false
+  early_stopping_patience: 10
+  save_dir: "./experiments/meg_deberta"
+
+  # Stochastic Weight Averaging
+  use_swa: false
+  swa_lrs: 1e-3
+
+logging:
+  log_dir: "./lightning_logs"
+  use_tensorboard: true
+  log_every_n_steps: 50
+  wandb:
+    project: ""  # Set your WandB project name if using
+    entity: ""  # Set your WandB entity/team name if using
+    name: "meg-deberta-experiment"
+    tags: ["phoneme", "classification", "meg", "deberta", "focal-loss"]
+    notes: "MEG classifier with DeBERTa attention and class-balanced focal loss"
+
+model:
+  # Model parameters - all defaults from your configuration
+  params:
+    # Core dimensions
+    meg_channels: 306      # MEG sensor channels
+    vocab_size: 39         # Number of phoneme classes
+    hidden_dim: 128        # Hidden dimension size
+
+    # Architecture choices
+    use_conformer: true    # Use Conformer with DeBERTa attention
+    num_conformers: 4      # Number of Conformer layers
+    norm_type: "pre"       # Pre-layer normalization
+
+    # Training parameters
+    learning_rate: 0.0001  # Base learning rate
+    classifier_lr_multiplier: 1.5  # Classifier learns faster
+
+    # Loss configuration - USING BALANCED FOCAL LOSS
+    loss_type: "balanced_focal"  # Class-balanced focal loss for imbalanced classes
+    focal_gamma: 2.0             # Focal loss gamma parameter
+    temperature: 1.0             # Temperature for class reweighting
+    use_class_weights: false     # Apply temperature-based class weights
+
+    # Contrastive learning parameters
+    use_contrastive: true        # Enable supervised contrastive learning
+    contrastive_weight: 0.5      # Weight for contrastive loss
+    contrastive_temperature: 0.03  # Temperature for contrastive similarity
+    embedding_dim: 128           # Dimension of the embedding space
+    projection_dim: 128          # Dimension of the projection head output
+
+    # IPA feature prediction parameters
+    use_ipa_features: true      # Enable IPA phonetic feature prediction
+    ipa_feature_weight: 0.2     # Weight for IPA feature loss
+    ipa_hidden_dim: 64          # Hidden dimension for IPA predictor
+
+    # IPA similarity-based classification (experimental)
+    use_ipa_similarity_classification: false
+    ipa_similarity_metric: "cosine"  # "cosine", "dot", "hamming"
+
+    # Regularization
+    dropout_rate: 0.5      # Dropout rate
+    label_smoothing: 0.12  # Label smoothing
+    weight_decay: 0.001    # L2 regularization
+
+    # Learning rate schedule
+    warmup_epochs: 5       # Linear warmup epochs
+    total_epochs: 200      # Total epochs for cosine schedule
+
+    # Metrics
+    metric_type: "f1_macro"  # Can also use "balanced_acc" for balanced accuracy
+
+    # Test-Time Augmentation settings
+    use_tta: true
+    tta_num_augmentations: 10      # Total augmentations to average
+    tta_temporal_shifts: [2, 4, 6]  # Shifts in time points
+    tta_channel_dropout: 0.05       # Drop 5% of channels randomly
+    tta_noise_std: 0.01             # Noise level relative to signal std
+    tta_weight_original: 2.0        # Higher weight for original prediction
+
+evaluation:
+  # Evaluation-specific settings
+  partition: "validation"  # "validation" or "test"
+  batch_size: 64
+  num_workers: 16
+  use_signal_averaging: true
+  grouped_samples: 100  # More averaging for cleaner evaluation
+  plot_results: true
+  save_plots: true
+
+submission:
+  # Submission generation settings
+  batch_size: 64
+  num_workers: 32
+  output_path: "./submissions/meg_deberta_submission.csv"
+  holdout_task: "phoneme"  # Task type for holdout dataset
