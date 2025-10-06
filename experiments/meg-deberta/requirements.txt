@@ -12,6 +12,9 @@ pyyaml>=6.0
 # PNPL library for MEG data loading (September Labs fork)
 pnpl @ git+https://github.com/September-Labs/pnpl.git
 
+# HuggingFace datasets for loading preprocessed data
+datasets>=2.14.0
+
 # Additional dependencies for PNPL compatibility
 mne-bids>=0.14.0
 huggingface-hub>=0.20.0

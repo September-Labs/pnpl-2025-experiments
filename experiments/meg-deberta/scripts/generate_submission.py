@@ -261,7 +261,7 @@ def submit_to_evalai(submission_file_path, method_name=None):
         print("Then set your token with: evalai set_token <your_token>")
         return False
     except KeyboardInterrupt:
-        print("\n\n⚠️  Submission interrupted by user")
+        print("\n\nWARNING: Submission interrupted by user")
         print("The upload may still be in progress on EvalAI's servers")
         return False
     except Exception as e:
@@ -342,7 +342,7 @@ def main(args):
     if abs(prob_sum - 1.0) < 1e-5:
         print("✅ Probabilities sum to 1.0 (valid submission)")
     else:
-        print("⚠️  WARNING: Probabilities do not sum to 1.0!")
+        print("WARNING: Probabilities do not sum to 1.0!")
     
     # Submit to EvalAI if requested
     if args.instant_send:
@@ -359,7 +359,7 @@ def main(args):
                 check=False
             )
             if token_check.returncode != 0 or "Token not found" in token_check.stdout:
-                print("⚠️  Warning: EvalAI token might not be set.")
+                print("Warning: EvalAI token might not be set.")
                 print("Set it with: evalai set_token <your_token>")
                 response = input("\nContinue with submission anyway? (y/n): ")
                 if response.lower() != 'y':
@@ -375,7 +375,7 @@ def main(args):
         if success:
             print("\n🎯 Submission complete! Check your results on EvalAI.")
         else:
-            print("\n⚠️  Submission failed. Please submit manually:")
+            print("\nWARNING: Submission failed. Please submit manually:")
             print(f"evalai challenge 2504 phase 4972 submit --file {output_path} --large --private")
     else:
         print("\n📌 To submit to EvalAI, run:")

@@ -2,7 +2,7 @@
 
 State-of-the-art MEG phoneme classification using DeBERTa-style attention mechanism and class-balanced focal loss.
 
-## 🌟 Key Features
+## Key Features
 
 - **DeBERTa Attention**: Disentangled self-attention mechanism adapted for MEG signals
 - **Class-Balanced Focal Loss**: Handles severely imbalanced phoneme distributions
@@ -11,7 +11,7 @@ State-of-the-art MEG phoneme classification using DeBERTa-style attention mechan
 - **MEG Conformer Architecture**: Specialized layers for MEG data processing
 - **Test-Time Augmentation**: Enhanced inference with temporal and channel augmentation
 
-## 📊 Architecture Overview
+## Architecture Overview
 
 The model combines several innovations:
 
@@ -21,7 +21,7 @@ The model combines several innovations:
 4. **Class-balanced focal loss** for handling 39 imbalanced phoneme classes
 5. **Supervised contrastive learning** for better feature representations
 
-## 🚀 Installation
+## Installation
 
 ```bash
 # Clone the repository
@@ -32,7 +32,47 @@ cd pnpl-2025-experiments/experiments/meg-deberta
 pip install -r requirements.txt
 ```
 
-## 📝 Quick Start
+## Dataset
+
+This model uses the **LibriBrain MEG Preprocessed Dataset** available on HuggingFace:
+https://huggingface.co/datasets/wordcab/libribrain-meg-preprocessed
+
+The dataset provides pre-grouped and averaged MEG samples for significantly faster loading:
+- **306 MEG channels** (102 magnetometers + 204 gradiometers)
+- **250 Hz sampling rate**
+- **~52 hours of recordings**
+- **Multiple grouping levels** (5, 10, 15, 20, 25, 30, 35, 45, 50, 55, 60, 100 samples)
+- **39 ARPABET phonemes** with position encoding
+
+### Loading the Dataset
+
+```python
+from datasets import load_dataset
+from pnpl.datasets import GroupedDataset
+
+# Load from HuggingFace (downloads preprocessed data)
+dataset = load_dataset("wordcab/libribrain-meg-preprocessed", "grouped_100")
+
+# Or load locally after downloading
+train_dataset = GroupedDataset(
+    preprocessed_path="data/grouped_100/train_grouped.h5",
+    load_to_memory=True  # Load entire dataset to RAM for faster training
+)
+```
+
+### Available Grouping Configurations
+
+| Grouping | Train Size | Validation | Test | Total Size |
+|----------|------------|------------|------|------------|
+| grouped_5 | 45.6 GB | 425 MB | 456 MB | ~47 GB |
+| grouped_10 | 22.8 GB | 213 MB | 228 MB | ~24 GB |
+| grouped_20 | 11.4 GB | 106 MB | 114 MB | ~12 GB |
+| grouped_50 | 4.6 GB | 37 MB | 42 MB | ~4.7 GB |
+| grouped_100 | 2.3 GB | 19 MB | 21 MB | ~2.4 GB |
+
+We recommend `grouped_100` for initial experiments (best speed/accuracy tradeoff).
+
+## Quick Start
 
 ### Training
 
@@ -41,6 +81,12 @@ pip install -r requirements.txt
 python scripts/train.py \
     --config configs/default_config.yaml \
     --data_path /path/to/your/meg/data
+
+# Or train with HuggingFace dataset
+python scripts/train.py \
+    --config configs/default_config.yaml \
+    --use_huggingface \
+    --grouping_level 100
 ```
 
 ### Evaluation
@@ -61,7 +107,7 @@ python scripts/generate_submission.py \
     --checkpoint path/to/best_checkpoint.ckpt
 ```
 
-## 🏗️ Model Architecture Details
+## Model Architecture Details
 
 ### DeBERTa Attention
 - Disentangled content and position representations
@@ -79,7 +125,7 @@ python scripts/generate_submission.py \
 - **Supervised Contrastive**: NT-Xent loss for representation learning
 - **IPA Feature Loss**: Binary cross-entropy for phonetic features
 
-## 🔧 Configuration
+## Configuration
 
 The model is highly configurable through YAML files. Key parameters:
 
@@ -94,7 +140,7 @@ model:
     use_ipa_features: true    # Enable IPA prediction
 ```
 
-## 📂 Repository Structure
+## Repository Structure
 
 ```
 meg-deberta/
@@ -111,13 +157,13 @@ meg-deberta/
 └── requirements.txt         # Dependencies
 ```
 
-## 🎯 Performance
+## Performance
 
 Model performance on LibriBrain 2025 dataset (to be updated):
 - **F1 Macro**: TBD
 - **Balanced Accuracy**: TBD
 
-## 📖 IPA Features
+## IPA Features
 
 The model predicts 14 phonetic features for each phoneme:
 - Consonantal, Syllabic, Sonorant, Voice
@@ -126,7 +172,7 @@ The model predicts 14 phonetic features for each phoneme:
 
 These features provide linguistic grounding and improve generalization.
 
-## 🔬 Technical Details
+## Technical Details
 
 ### Data Processing
 - MEG signals: 306 channels (204 gradiometers + 102 magnetometers)
@@ -140,7 +186,7 @@ These features provide linguistic grounding and improve generalization.
 - Gradient clipping for stability
 - Optional Stochastic Weight Averaging (SWA)
 
-## 📚 Citation
+## Citation
 
 If you use this code in your research, please cite:
 
@@ -153,20 +199,20 @@ If you use this code in your research, please cite:
 }
 ```
 
-## 📄 License
+## License
 
 This project is licensed under CC BY-NC 4.0 - see the LICENSE file for details.
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - PNPL library by September Labs for MEG data handling
 - LibriBrain 2025 competition organizers
 - DeBERTa paper for the attention mechanism inspiration
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Please feel free to submit issues or pull requests.
 
-## 📧 Contact
+## Contact
 
 For questions or collaborations, please open an issue on GitHub.
