@@ -1,4 +1,4 @@
-# MEG-DeBERTa Phoneme Classifier
+# DeMEGa: Disentangled MEG Attention Phoneme Classifier
 
 State-of-the-art MEG phoneme classification using DeBERTa-style attention mechanism and class-balanced focal loss.
 
@@ -26,7 +26,7 @@ The model combines several innovations:
 ```bash
 # Clone the repository
 git clone https://github.com/September-Labs/pnpl-2025-experiments.git
-cd pnpl-2025-experiments/experiments/meg-deberta
+cd pnpl-2025-experiments/experiments/demega
 
 # Install dependencies
 pip install -r requirements.txt
@@ -143,7 +143,7 @@ model:
 ## Repository Structure
 
 ```
-meg-deberta/
+demega/
 ├── meg_classifier/           # Main package
 │   ├── models/              # Model implementation
 │   │   ├── meg_classifier.py
@@ -191,8 +191,8 @@ These features provide linguistic grounding and improve generalization.
 If you use this code in your research, please cite:
 
 ```bibtex
-@software{meg_deberta_2025,
-  title={MEG-DeBERTa: Disentangled Attention for MEG Phoneme Classification},
+@software{demega_2025,
+  title={DeMEGa: Disentangled MEG Attention for Phoneme Classification},
   author={Your Name},
   year={2025},
   url={https://github.com/September-Labs/pnpl-2025-experiments}

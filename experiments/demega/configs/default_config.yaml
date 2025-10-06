@@ -1,4 +1,4 @@
-# MEG-DeBERTa Phoneme Classifier Configuration
+# DeMEGa Phoneme Classifier Configuration
 # Features DeBERTa attention, class-balanced focal loss, and pre-layer normalization
 
 data:
@@ -34,7 +34,7 @@ training:
   accumulate_grad_batches: 1
   use_early_stopping: false
   early_stopping_patience: 10
-  save_dir: "./experiments/meg_deberta"
+  save_dir: "./experiments/demega"
 
   # Stochastic Weight Averaging
   use_swa: false
@@ -47,9 +47,9 @@ logging:
   wandb:
     project: ""  # Set your WandB project name if using
     entity: ""  # Set your WandB entity/team name if using
-    name: "meg-deberta-experiment"
-    tags: ["phoneme", "classification", "meg", "deberta", "focal-loss"]
-    notes: "MEG classifier with DeBERTa attention and class-balanced focal loss"
+    name: "demega-experiment"
+    tags: ["phoneme", "classification", "meg", "demega", "focal-loss"]
+    notes: "DeMEGa classifier with disentangled attention and class-balanced focal loss"
 
 model:
   # Model parameters - all defaults from your configuration
@@ -124,5 +124,5 @@ submission:
   # Submission generation settings
   batch_size: 64
   num_workers: 32
-  output_path: "./submissions/meg_deberta_submission.csv"
+  output_path: "./submissions/demega_submission.csv"
   holdout_task: "phoneme"  # Task type for holdout dataset

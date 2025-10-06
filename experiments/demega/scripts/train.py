@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Training script for MEG-DeBERTa Phoneme Classifier
+Training script for DeMEGa Phoneme Classifier
 
 This script trains the MEG phoneme classification model using the pnpl library
 for data loading and Lightning for training orchestration.
@@ -231,7 +231,7 @@ def main(args):
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
     
     monitor_metric = "val_f1_macro"
-    filename_template = "meg-deberta-{epoch:02d}-{val_f1_macro:.2f}"
+    filename_template = "demega-{epoch:02d}-{val_f1_macro:.2f}"
     
     checkpoint_callback = ModelCheckpoint(
         dirpath=checkpoint_dir,
@@ -284,7 +284,7 @@ def main(args):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Train MEG-DeBERTa Phoneme Classifier")
+    parser = argparse.ArgumentParser(description="Train DeMEGa Phoneme Classifier")
     
     parser.add_argument(
         "--config",

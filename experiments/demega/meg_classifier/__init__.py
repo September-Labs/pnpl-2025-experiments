@@ -1,7 +1,7 @@
 """
-MEG-DeBERTa Classifier
+DeMEGa Classifier
 
-A state-of-the-art MEG phoneme classification model using DeBERTa attention
+A state-of-the-art MEG phoneme classification model using disentangled attention
 and class-balanced focal loss.
 """
 

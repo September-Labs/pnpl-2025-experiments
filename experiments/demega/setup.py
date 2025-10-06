@@ -1,5 +1,5 @@
 """
-Setup script for MEG-DeBERTa Classifier
+Setup script for DeMEGa Classifier
 """
 
 from setuptools import setup, find_packages
@@ -10,10 +10,10 @@ this_directory = Path(__file__).parent
 long_description = (this_directory / "README.md").read_text()
 
 setup(
-    name="meg-deberta-classifier",
+    name="demega-classifier",
     version="0.1.0",
     author="September Labs",
-    description="MEG phoneme classification using DeBERTa attention and focal loss",
+    description="DeMEGa: Disentangled MEG attention for phoneme classification with focal loss",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/September-Labs/pnpl-2025-experiments",
@@ -56,10 +56,10 @@ setup(
     },
     entry_points={
         "console_scripts": [
-            "meg-train=scripts.train:main",
-            "meg-evaluate=scripts.evaluate:main",
-            "meg-submit=scripts.generate_submission:main",
+            "demega-train=scripts.train:main",
+            "demega-evaluate=scripts.evaluate:main",
+            "demega-submit=scripts.generate_submission:main",
         ],
     },
-    keywords="MEG, EEG, phoneme, classification, deep learning, DeBERTa, attention",
+    keywords="MEG, EEG, phoneme, classification, deep learning, DeMEGa, disentangled attention",
 )

@@ -1,7 +1,7 @@
 """
-MEG-DeBERTa Model Components
+DeMEGa Model Components
 
-This package contains the core building blocks for the MEG phoneme classifier:
+This package contains the core building blocks for the DeMEGa phoneme classifier:
 - DeBERTa-style attention mechanism
 - MEG Conformer layers
 - Specialized loss functions

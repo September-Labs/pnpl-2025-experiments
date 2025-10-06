@@ -1,5 +1,5 @@
 """
-MEG-DeBERTa Model Package
+DeMEGa Model Package
 
 Main model implementation for MEG phoneme classification.
 """

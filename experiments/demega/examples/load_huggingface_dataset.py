@@ -3,7 +3,7 @@
 Example: Loading LibriBrain MEG Preprocessed Dataset from HuggingFace
 
 This script demonstrates how to load and use the preprocessed MEG dataset
-from HuggingFace for training the MEG-DeBERTa classifier.
+from HuggingFace for training the DeMEGa classifier.
 
 Dataset: https://huggingface.co/datasets/wordcab/libribrain-meg-preprocessed
 """
