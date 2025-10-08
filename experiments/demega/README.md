@@ -49,11 +49,15 @@ The dataset provides pre-grouped and averaged MEG samples for significantly fast
 ### Loading the Dataset
 
 ```python
-from datasets import load_dataset
+from huggingface_hub import snapshot_download
 from pnpl.datasets import GroupedDataset
 
-# Load from HuggingFace (downloads preprocessed data)
-dataset = load_dataset("wordcab/libribrain-meg-preprocessed", "grouped_100")
+local_path = snapshot_download(
+    repo_id="wordcab/libribrain-meg-preprocessed",
+    repo_type="dataset",                 
+    allow_patterns=["data/grouped_100**"],    
+    local_dir="data" 
+)
 
 # Or load locally after downloading
 train_dataset = GroupedDataset(
