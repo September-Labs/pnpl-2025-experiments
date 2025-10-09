@@ -43,7 +43,7 @@ The dataset provides pre-grouped and averaged MEG samples for significantly fast
 - **306 MEG channels** (102 magnetometers + 204 gradiometers)
 - **250 Hz sampling rate**
 - **~52 hours of recordings**
-- **Multiple grouping levels** (5, 10, 15, 20, 25, 30, 35, 45, 50, 55, 60, 100 samples)
+- **Multiple grouping levels** (5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100 samples - increments of 5)
 - **39 ARPABET phonemes** with position encoding
 
 ### Downloading the Dataset
