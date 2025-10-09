@@ -46,18 +46,53 @@ The dataset provides pre-grouped and averaged MEG samples for significantly fast
 - **Multiple grouping levels** (5, 10, 15, 20, 25, 30, 35, 45, 50, 55, 60, 100 samples)
 - **39 ARPABET phonemes** with position encoding
 
-### Loading the Dataset
+### Downloading the Dataset
+
+**Important:** This dataset contains binary HDF5 (.h5) files, NOT standard datasets. You cannot use `datasets.load_dataset()` - you must use `snapshot_download()` or our download script.
+
+#### Option 1: Using the Download Script (Recommended)
+
+```bash
+# Download grouped_100 (2.4 GB) - fastest option for experiments
+python download_data.py --grouping_level 100 --output_dir ./data
+
+# Download grouped_20 (12 GB) - better accuracy
+python download_data.py --grouping_level 20 --output_dir ./data
+```
+
+#### Option 2: Manual Download with Python
 
 ```python
-from datasets import load_dataset
+from huggingface_hub import snapshot_download
+
+# Download h5 files for grouped_100
+snapshot_download(
+    repo_id="wordcab/libribrain-meg-preprocessed",
+    repo_type="dataset",
+    allow_patterns=["data/grouped_100/**"],
+    local_dir="./data"
+)
+```
+
+#### Directory Structure After Download
+
+```
+data/
+└── grouped_100/
+    ├── train_grouped.h5        # Training data
+    ├── validation_grouped.h5   # Validation data
+    └── test_grouped.h5          # Test data
+```
+
+#### Loading Locally
+
+After downloading, the training script will automatically detect and use local h5 files:
+
+```python
 from pnpl.datasets import GroupedDataset
 
-# Load from HuggingFace (downloads preprocessed data)
-dataset = load_dataset("wordcab/libribrain-meg-preprocessed", "grouped_100")
-
-# Or load locally after downloading
 train_dataset = GroupedDataset(
-    preprocessed_path="data/grouped_100/train_grouped.h5",
+    preprocessed_path="./data/grouped_100/train_grouped.h5",
     load_to_memory=True  # Load entire dataset to RAM for faster training
 )
 ```
@@ -76,19 +111,36 @@ We recommend `grouped_100` for initial experiments (best speed/accuracy tradeoff
 
 ## Quick Start
 
-### Training
+### Step 1: Download the Dataset
 
 ```bash
-# Train with default configuration
-python scripts/train.py \
-    --config configs/default_config.yaml \
-    --data_path /path/to/your/meg/data
+# Download preprocessed h5 files (recommended - only needs to be done once)
+python download_data.py --grouping_level 100 --output_dir ./data
+```
 
-# Or train with HuggingFace dataset
+### Step 2: Train the Model
+
+#### Option A: Using Preprocessed H5 Files (Recommended)
+
+```bash
+# Train with downloaded h5 files
 python scripts/train.py \
     --config configs/default_config.yaml \
     --use_huggingface \
-    --grouping_level 100
+    --grouping_level 100 \
+    --local_dir ./data
+
+# The script will automatically use existing h5 files if available
+# Add --download to force re-download
+```
+
+#### Option B: Using Raw MEG Data (Slower)
+
+```bash
+# Train with raw MEG data (requires LibriBrain raw dataset)
+python scripts/train.py \
+    --config configs/default_config.yaml \
+    --data_path /path/to/libribrain/raw/data
 ```
 
 ### Evaluation
