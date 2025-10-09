@@ -2,7 +2,7 @@
 
 State-of-the-art MEG phoneme classification using DeBERTa-style attention mechanism and class-balanced focal loss.
 
-**Authors:** Aleksandr Smechov, Ihor Stepanov, Alexander Yavorskyi, and Shivam Chaudhary
+**Authors:** [Aleksandr Smechov](https://www.linkedin.com/in/aleksandr-smechov/), [Ihor Stepanov](https://www.linkedin.com/in/ihor-knowledgator/), [Alexander Yavorskyi](https://www.linkedin.com/in/oleksandr-yavorskyi/), and [Shivam Chaudhary](https://www.linkedin.com/in/shivam199/)
 
 ## Key Features
 
@@ -99,15 +99,32 @@ train_dataset = GroupedDataset(
 
 ### Available Grouping Configurations
 
-| Grouping | Train Size | Validation | Test | Total Size |
-|----------|------------|------------|------|------------|
-| grouped_5 | 45.6 GB | 425 MB | 456 MB | ~47 GB |
-| grouped_10 | 22.8 GB | 213 MB | 228 MB | ~24 GB |
-| grouped_20 | 11.4 GB | 106 MB | 114 MB | ~12 GB |
-| grouped_50 | 4.6 GB | 37 MB | 42 MB | ~4.7 GB |
-| grouped_100 | 2.3 GB | 19 MB | 21 MB | ~2.4 GB |
+The dataset is available in multiple grouping levels (increments of 5 from 5 to 100):
 
-We recommend `grouped_100` for initial experiments (best speed/accuracy tradeoff).
+| Grouping | Train Size | Validation | Test | Total Size | Notes |
+|----------|------------|------------|------|------------|-------|
+| grouped_5 | 45.6 GB | 425 MB | 456 MB | ~47 GB | Maximum data points, highest accuracy |
+| grouped_10 | 22.8 GB | 213 MB | 228 MB | ~24 GB | |
+| grouped_15 | 15.2 GB | 142 MB | 152 MB | ~16 GB | |
+| grouped_20 | 11.4 GB | 106 MB | 114 MB | ~12 GB | Good balance |
+| grouped_25 | 9.1 GB | 85 MB | 91 MB | ~9.6 GB | |
+| grouped_30 | 7.6 GB | 71 MB | 76 MB | ~8 GB | |
+| grouped_35 | 6.5 GB | 61 MB | 65 MB | ~6.9 GB | |
+| grouped_40 | 5.7 GB | 53 MB | 57 MB | ~6 GB | |
+| grouped_45 | 5.1 GB | 47 MB | 51 MB | ~5.3 GB | |
+| grouped_50 | 4.6 GB | 37 MB | 42 MB | ~4.7 GB | |
+| grouped_55 | 4.1 GB | 39 MB | 41 MB | ~4.4 GB | |
+| grouped_60 | 3.8 GB | 36 MB | 38 MB | ~4 GB | |
+| grouped_65 | 3.5 GB | 33 MB | 35 MB | ~3.7 GB | |
+| grouped_70 | 3.3 GB | 30 MB | 33 MB | ~3.4 GB | |
+| grouped_75 | 3.0 GB | 28 MB | 30 MB | ~3.2 GB | |
+| grouped_80 | 2.9 GB | 27 MB | 29 MB | ~3 GB | |
+| grouped_85 | 2.7 GB | 25 MB | 27 MB | ~2.8 GB | |
+| grouped_90 | 2.5 GB | 24 MB | 25 MB | ~2.7 GB | |
+| grouped_95 | 2.4 GB | 22 MB | 24 MB | ~2.5 GB | |
+| grouped_100 | 2.3 GB | 19 MB | 21 MB | ~2.4 GB | **Recommended** - fastest loading |
+
+**Recommendation:** Use `grouped_100` for quick experiments and `grouped_20` or lower for production models.
 
 ## Quick Start
 
@@ -269,10 +286,10 @@ Contributions are welcome! Please feel free to submit issues or pull requests.
 
 ## Authors
 
-- **Aleksandr Smechov**
-- **Ihor Stepanov**
-- **Alexander Yavorskyi**
-- **Shivam Chaudhary**
+- **[Aleksandr Smechov](https://www.linkedin.com/in/aleksandr-smechov/)**
+- **[Ihor Stepanov](https://www.linkedin.com/in/ihor-knowledgator/)**
+- **[Alexander Yavorskyi](https://www.linkedin.com/in/oleksandr-yavorskyi/)**
+- **[Shivam Chaudhary](https://www.linkedin.com/in/shivam199/)**
 
 ## Contact
 
