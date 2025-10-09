@@ -2,8 +2,12 @@
 """
 Example: Loading LibriBrain MEG Preprocessed Dataset from HuggingFace
 
-This script demonstrates how to load and use the preprocessed MEG dataset
-from HuggingFace for training the DeMEGa classifier.
+This script demonstrates how to download and load the preprocessed MEG dataset
+(h5 files) from HuggingFace for training the DeMEGa classifier.
+
+IMPORTANT: This dataset contains binary HDF5 (.h5) files, NOT standard datasets.
+You must use snapshot_download() to download the files, then load them with
+PNPL's GroupedDataset.
 
 Dataset: https://huggingface.co/datasets/wordcab/libribrain-meg-preprocessed
 """
@@ -11,7 +15,6 @@ Dataset: https://huggingface.co/datasets/wordcab/libribrain-meg-preprocessed
 import os
 import sys
 from pathlib import Path
-from datasets import load_dataset
 from pnpl.datasets import GroupedDataset
 from torch.utils.data import DataLoader
 import torch
@@ -21,35 +24,34 @@ sys.path.append(str(Path(__file__).parent.parent))
 from meg_classifier.models import SingleStageMEGClassifier
 
 
-def load_from_huggingface(grouping_level=100, cache_dir="./data/hf_cache"):
+def download_from_huggingface(grouping_level=100, local_dir="./data"):
     """
-    Load the LibriBrain MEG dataset from HuggingFace.
+    Download the LibriBrain MEG h5 files from HuggingFace.
 
     Args:
         grouping_level: Number of samples grouped (5, 10, 15, 20, 25, 30, 35, 45, 50, 55, 60, 100)
-        cache_dir: Directory to cache downloaded data
+        local_dir: Directory to save downloaded h5 files
 
     Returns:
-        Dictionary with train, validation, and test datasets
+        Path to the downloaded data directory
     """
-    print(f"Loading LibriBrain MEG dataset from HuggingFace...")
-    print(f"Grouping level: {grouping_level} samples")
-    print(f"Cache directory: {cache_dir}")
+    from huggingface_hub import snapshot_download
 
-    # Load dataset from HuggingFace
-    # This will download the data if not already cached
-    dataset = load_dataset(
-        "wordcab/libribrain-meg-preprocessed",
-        f"grouped_{grouping_level}",
-        cache_dir=cache_dir
+    print(f"Downloading LibriBrain MEG h5 files from HuggingFace...")
+    print(f"Grouping level: {grouping_level} samples")
+    print(f"Download directory: {local_dir}")
+
+    # Download h5 files using snapshot_download
+    # This downloads only the specified grouping level to save space
+    local_path = snapshot_download(
+        repo_id="wordcab/libribrain-meg-preprocessed",
+        repo_type="dataset",
+        allow_patterns=[f"data/grouped_{grouping_level}/**"],
+        local_dir=local_dir
     )
 
-    print(f"Dataset loaded successfully!")
-    print(f"Train samples: {len(dataset['train'])}")
-    print(f"Validation samples: {len(dataset['validation'])}")
-    print(f"Test samples: {len(dataset['test'])}")
-
-    return dataset
+    print(f"Download complete! Files saved to {local_path}")
+    return Path(local_dir) / f"grouped_{grouping_level}"
 
 
 def load_preprocessed_locally(data_dir, grouping_level=100, load_to_memory=True):
@@ -96,31 +98,32 @@ def load_preprocessed_locally(data_dir, grouping_level=100, load_to_memory=True)
     }
 
 
-def compare_grouping_levels(cache_dir="./data/hf_cache"):
+def compare_grouping_levels():
     """
     Compare different grouping levels to help choose the best one.
     """
     print("Comparing different grouping levels:\n")
-    print("Level | Train Size | Val Size | Test Size | Approx. Download")
-    print("-" * 60)
+    print("Level | Train Groups | Val Groups | Test Groups | Approx. Download Size")
+    print("-" * 75)
 
     grouping_options = [
-        (5, "47 GB"),
-        (10, "24 GB"),
-        (20, "12 GB"),
-        (50, "4.7 GB"),
-        (100, "2.4 GB")
+        (5, "~47 GB"),
+        (10, "~24 GB"),
+        (20, "~12 GB"),
+        (50, "~4.7 GB"),
+        (100, "~2.4 GB")
     ]
 
     for level, size in grouping_options:
-        # This would normally load the dataset, but we'll just show info
-        print(f"{level:5} | {'~' + str(45600//level):10} | {'~' + str(425//level):8} | "
-              f"{'~' + str(456//level):9} | {size:>10}")
+        # Approximate group counts (based on grouping raw samples)
+        print(f"{level:5} | {45600//level:>12} | {425//level:>10} | "
+              f"{456//level:>11} | {size:>20}")
 
     print("\nRecommendation:")
     print("- Use grouped_100 for quick experiments (smallest size, fastest loading)")
     print("- Use grouped_20 for better accuracy with reasonable size")
     print("- Use grouped_5 for maximum accuracy (requires significant storage)")
+    print("\nNote: Lower grouping levels = more data points but larger file sizes")
 
 
 def create_dataloaders(dataset, batch_size=32, num_workers=4):
@@ -168,18 +171,20 @@ def create_dataloaders(dataset, batch_size=32, num_workers=4):
 
 def main():
     """
-    Example usage of the HuggingFace dataset.
+    Example usage: Download and load h5 files from HuggingFace.
     """
     import argparse
 
-    parser = argparse.ArgumentParser(description="Load LibriBrain MEG dataset from HuggingFace")
+    parser = argparse.ArgumentParser(
+        description="Download and load LibriBrain MEG h5 files from HuggingFace"
+    )
     parser.add_argument('--grouping_level', type=int, default=100,
                         choices=[5, 10, 15, 20, 25, 30, 35, 45, 50, 55, 60, 100],
                         help='Number of samples grouped together')
-    parser.add_argument('--cache_dir', type=str, default='./data/hf_cache',
-                        help='Directory to cache HuggingFace datasets')
-    parser.add_argument('--local_dir', type=str, default=None,
-                        help='Local directory with preprocessed .h5 files')
+    parser.add_argument('--local_dir', type=str, default='./data',
+                        help='Directory to download/load h5 files')
+    parser.add_argument('--download', action='store_true',
+                        help='Force download even if files exist')
     parser.add_argument('--compare', action='store_true',
                         help='Compare different grouping levels')
     parser.add_argument('--batch_size', type=int, default=32,
@@ -188,23 +193,32 @@ def main():
     args = parser.parse_args()
 
     if args.compare:
-        compare_grouping_levels(args.cache_dir)
+        compare_grouping_levels()
         return
 
-    # Load dataset
-    if args.local_dir:
-        # Load from local preprocessed files
-        datasets = load_preprocessed_locally(
-            args.local_dir,
-            args.grouping_level,
-            load_to_memory=True
-        )
+    # Check if files exist locally
+    h5_dir = Path(args.local_dir) / f"grouped_{args.grouping_level}"
+    files_exist = (
+        (h5_dir / "train_grouped.h5").exists() and
+        (h5_dir / "validation_grouped.h5").exists() and
+        (h5_dir / "test_grouped.h5").exists()
+    )
+
+    # Download if needed
+    if not files_exist or args.download:
+        print("Downloading h5 files from HuggingFace...")
+        data_dir = download_from_huggingface(args.grouping_level, args.local_dir)
     else:
-        # Load from HuggingFace (will download if needed)
-        datasets = load_from_huggingface(
-            args.grouping_level,
-            args.cache_dir
-        )
+        print(f"Using existing h5 files from {h5_dir}")
+        data_dir = h5_dir
+
+    # Load datasets from h5 files
+    print("\nLoading datasets from h5 files...")
+    datasets = load_preprocessed_locally(
+        args.local_dir,
+        args.grouping_level,
+        load_to_memory=True
+    )
 
     # Create DataLoaders
     dataloaders = create_dataloaders(datasets, batch_size=args.batch_size)

@@ -2,23 +2,21 @@
 # Features DeBERTa attention, class-balanced focal loss, and pre-layer normalization
 
 data:
-  # Option 1: Load from local path
+  # Data path (only required when NOT using --use_huggingface flag)
   data_path: "${DATA_PATH}"  # Set via environment variable or --data_path argument
-
-  # Option 2: Load from HuggingFace dataset
-  use_huggingface: false  # Set to true to use HuggingFace dataset
-  huggingface_dataset: "wordcab/libribrain-meg-preprocessed"
-  grouping_level: 100  # Options: 5, 10, 15, 20, 25, 30, 35, 45, 50, 55, 60, 100
-  cache_dir: "./data/huggingface_cache"  # Where to cache downloaded data
 
   # Data processing parameters
   tmin: 0.0
   tmax: 0.5  # 0.5 seconds for 125 time points at 250Hz
   use_subset: false  # Set to false for full training data
   use_signal_averaging: true
-  grouped_samples: 100  # Group average for better SNR (used for local data)
+  grouped_samples: 100  # Group average for better SNR (only used for raw data loading)
   shuffle_seed: 777  # For reproducible shuffling
   load_to_memory: true  # Load entire dataset to RAM for faster access
+
+  # NOTE: To use preprocessed h5 files from HuggingFace, use CLI flags:
+  #   --use_huggingface --grouping_level 100 --local_dir ./data
+  # Available grouping levels: 5, 10, 15, 20, 25, 30, 35, 45, 50, 55, 60, 100
 
 training:
   max_epochs: 5  # Adjust based on your needs
