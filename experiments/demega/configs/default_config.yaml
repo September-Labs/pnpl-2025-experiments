@@ -50,6 +50,10 @@ logging:
     notes: "DeMEGa classifier with disentangled attention and class-balanced focal loss"
 
 model:
+  # Model class specification
+  module: "meg_classifier.models.meg_classifier"
+  class: "SingleStageMEGClassifier"
+
   # Model parameters - all defaults from your configuration
   params:
     # Core dimensions

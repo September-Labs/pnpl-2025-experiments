@@ -4,6 +4,12 @@ State-of-the-art MEG phoneme classification using DeBERTa-style attention mechan
 
 **Authors:** [Aleksandr Smechov](https://www.linkedin.com/in/aleksandr-smechov/), [Ihor Stepanov](https://www.linkedin.com/in/ihor-knowledgator/), [Alexander Yavorskyi](https://www.linkedin.com/in/oleksandr-yavorskyi/), and [Shivam Chaudhary](https://www.linkedin.com/in/shivam199/)
 
+## About September Labs
+
+We're September Labs, and our mission is to scale non-invasive data collection to unprecedented levels, then use this data to train foundation models that help decode patient speech patterns.
+
+We're a multi-disciplinary group, so our approach to MEG phoneme classification likewise borrowed from our collective experience, including medical NLP, speech recognition, and invasive BCI systems. This approach, combined with tons of trial and error, and parameter tuning, got us around ~60% on the holdout for Phase 2 of the Extended Track.
+
 ## Key Features
 
 - **DeBERTa Attention**: Disentangled self-attention mechanism adapted for MEG signals
@@ -11,17 +17,54 @@ State-of-the-art MEG phoneme classification using DeBERTa-style attention mechan
 - **IPA Feature Prediction**: Multi-task learning with phonetic features
 - **Supervised Contrastive Learning**: Improved representation learning
 - **MEG Conformer Architecture**: Specialized layers for MEG data processing
-- **Test-Time Augmentation**: Enhanced inference with temporal and channel augmentation
+- **Wavelet Denoising**: Advanced signal preprocessing with db4 wavelets
+- **Temperature-Scaled Class Reweighting**: Automatic handling of rare phonemes
 
 ## Architecture Overview
 
-The model combines several innovations:
+Our architecture combines six key innovations, developed through two months of experimentation and iterative refinement:
 
-1. **MEG-specific preprocessing**: Robust normalization using median and IQR
-2. **Conformer blocks** with DeBERTa attention for temporal modeling
-3. **Multi-task learning** with IPA phonetic feature prediction
-4. **Class-balanced focal loss** for handling 39 imbalanced phoneme classes
-5. **Supervised contrastive learning** for better feature representations
+### A) DeBERTa Attention for MEG Signals
+We adapted DeBERTa's disentangled attention mechanism to MEG temporal data. Using disentangled attention helps capture temporal dependencies and makes positional information dependent on channel information. So we don't just memorize specific patterns at specific time points. This makes the model more invariant to the time axis.
+
+**Implementation:** [`meg_classifier/models/components/deberta_attention.py`](meg_classifier/models/components/deberta_attention.py)
+
+### B) Class-Balanced Focal Loss with IPA Features
+We implemented focal loss with per-class averaging to handle severe phoneme imbalance. We augmented this with IPA (International Phonetic Alphabet) phonetic feature prediction, with 14 articulatory features (consonantal, voicing, place of articulation, etc.) as an auxiliary task. This improved generalization a bit, especially for rare phonemes.
+
+**Implementations:**
+- Focal Loss: [`meg_classifier/models/components/losses.py`](meg_classifier/models/components/losses.py) - `focal_loss_mean_over_present_classes`
+- IPA Features: [`meg_classifier/models/components/ipa_features.py`](meg_classifier/models/components/ipa_features.py)
+
+### C) Supervised Contrastive Learning
+We added a supervised NT-Xent contrastive loss to learn better feature representations. Samples from the same phoneme class are pulled together in embedding space while different classes are pushed apart, improving decision boundaries for confusable phonemes.
+
+**Implementation:** [`meg_classifier/models/components/losses.py`](meg_classifier/models/components/losses.py) - `supervised_nt_xent`
+
+### D) Signal Processing & Normalization
+We used median-IQR normalization instead of mean-std to handle MEG outliers and artifacts. For data augmentation, we applied temporal jittering (±8-24ms shifts), channel dropout (5%), and Gaussian noise, then used test-time augmentation (TTA) with weighted averaging. TTA wasn't actually effective!
+
+**Implementation:** [`meg_classifier/models/components/conformer.py`](meg_classifier/models/components/conformer.py) - `normalize` function
+
+### E) Temperature-Scaled Class Reweighting
+We computed class weights using exponential frequency-based temperature scaling: `w_c = exp(-T × freq_c)`, clamped to [0.5, 5.0]. This automatically upweights rare phonemes without manual tuning.
+
+**Implementation:** [`meg_classifier/models/meg_classifier.py`](meg_classifier/models/meg_classifier.py) - `BalancedPhonemePretrainer`
+
+### F) Wavelet Denoising
+Before feeding the holdout data to the trained model, the signal undergoes wavelet decomposition. For each MEG channel, the signal undergoes wavelet decomposition with the **db4 wavelet** (Daubechies 4) at **decomposition level 3**, breaking the signal into 4 sets of coefficients: 1 approximation and 3 detail levels.
+
+The noise level is estimated using the **Median Absolute Deviation (MAD)** method: `sigma = median(abs(finest_details)) / 0.6745`, where 0.6745 is the scaling factor for Gaussian noise consistency.
+
+The threshold is calculated using the universal threshold formula: `threshold = sigma * sqrt(2 * log(n))`, where n is the signal length (125 timepoints). This threshold is scaled by the `denoise_strength` parameter (default 0.6).
+
+**Soft thresholding** is applied to detail coefficients at all decomposition levels except the approximation coefficients. After thresholding, the signal is reconstructed using `waverec`. The `preserve_scale` flag ensures the denoised signal maintains the original mean and standard deviation.
+
+**Implementation:** Available in the `pnpl` library preprocessing utilities
+
+## Development Approach
+
+To arrive at this architecture, we spent two months throwing whatever we could at the holdout, mostly stuff picked up from our backgrounds, and hardly any MEG or EEG specific architecture (ex. EEGFormer). In the last two weeks, we took the best performing architectures and iterated on them.
 
 ## Installation
 
@@ -45,6 +88,20 @@ The dataset provides pre-grouped and averaged MEG samples for significantly fast
 - **~52 hours of recordings**
 - **Multiple grouping levels** (5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100 samples - increments of 5)
 - **39 ARPABET phonemes** with position encoding
+
+### External Datasets for Extended Track
+
+Since we focused our attention on the Extended Track, we tried various external datasets until we found some that significantly boosted F1 Macro scores:
+
+1. **DSC_3011085.05_995** - MEG dataset from Radboud University
+   - URL: https://data.ru.nl/collections/di/dccn/DSC_3011085.05_995
+   - Contains phoneme-related MEG recordings with multiple participants
+
+2. **ds006468** - MEG dataset from NEMAR
+   - URL: https://nemar.org/dataexplorer/detail?dataset_id=ds006468
+   - Includes German phoneme data
+
+Given the similarity of the tasks in these datasets and multiple participants, we think these datasets (even the one with German phonemes) could be a great validation/test set (or vice versa) to test how robust your architecture is on different participants and across languages.
 
 ### Downloading the Dataset
 
@@ -173,27 +230,27 @@ python scripts/evaluate.py \
 
 ```bash
 # Generate predictions for competition
+# Note: Ensure config specifies class: SingleStageMEGClassifier
 python scripts/generate_submission.py \
     --config configs/default_config.yaml \
     --checkpoint path/to/best_checkpoint.ckpt
 ```
 
-## Model Architecture Details
+## Technical Implementation Details
 
 ### DeBERTa Attention
-- Disentangled content and position representations
-- Content-to-position and position-to-content attention
-- Log-scaled position buckets for efficient encoding
+The disentangled attention mechanism separates content and position representations, computing content-to-position (c2p) and position-to-content (p2c) attention scores. Log-scaled position buckets enable efficient encoding of long sequences.
+
+**Code:** [`meg_classifier/models/components/deberta_attention.py`](meg_classifier/models/components/deberta_attention.py)
 
 ### MEG Conformer Layer
-- Depthwise separable convolutions
-- DeBERTa self-attention
-- Feed-forward network with SiLU activation
-- Pre-layer normalization for stable training
+Combines depthwise separable convolutions with DeBERTa self-attention and feed-forward networks using SiLU activation. Pre-layer normalization ensures stable training.
+
+**Code:** [`meg_classifier/models/components/conformer.py`](meg_classifier/models/components/conformer.py)
 
 ### Loss Functions
-- **Balanced Focal Loss**: Combines focal loss with per-class averaging
-- **Supervised Contrastive**: NT-Xent loss for representation learning
+- **Balanced Focal Loss**: Combines focal loss with per-class averaging ([`losses.py`](meg_classifier/models/components/losses.py))
+- **Supervised Contrastive**: NT-Xent loss for representation learning ([`losses.py`](meg_classifier/models/components/losses.py))
 - **IPA Feature Loss**: Binary cross-entropy for phonetic features
 
 ## Configuration
@@ -230,9 +287,38 @@ demega/
 
 ## Performance
 
-Model performance on LibriBrain 2025 dataset (to be updated):
-- **F1 Macro**: TBD
-- **Balanced Accuracy**: TBD
+Model performance on LibriBrain 2025 dataset:
+- **Validation F1 Macro**: 0.45
+- **Holdout F1 Macro**: 0.58
+
+## Model Architecture Details
+
+The complete model architecture consists of the following components:
+
+| Name               | Type                      | Params | Mode  |
+|--------------------|---------------------------|--------|-------|
+| 0  \| pretrainer         | BalancedPhonemePretrainer | 0      | train |
+| 1  \| input_projection   | Sequential                | 245 K  | train |
+| 2  \| input_skip         | Conv1d                    | 39.3 K | train |
+| 3  \| meg_encoder        | ModuleList                | 764 K  | train |
+| 4  \| feature_aggregator | Sequential                | 4.1 M  | train |
+| 5  \| classifier         | Linear                    | 5.0 K  | train |
+| 6  \| ipa_predictor      | Sequential                | 9.2 K  | train |
+| 7  \| projection_head    | Sequential                | 33.0 K | train |
+| 8  \| feature_norm       | LayerNorm                 | 256    | train |
+| 9  \| train_metric       | MulticlassF1Score         | 0      | train |
+| 10 \| val_metric         | MulticlassF1Score         | 0      | train |
+| 11 \| test_metric        | MulticlassF1Score         | 0      | train |
+
+**Total Parameters:**
+- **5.2M** Trainable params
+- **0** Non-trainable params
+- **5.2M** Total params
+- **20.904 MB** Total estimated model params size
+- **135** Modules in train mode
+- **0** Modules in eval mode
+
+**Main Model Class:** [`SingleStageMEGClassifier`](meg_classifier/models/meg_classifier.py)
 
 ## IPA Features
 
