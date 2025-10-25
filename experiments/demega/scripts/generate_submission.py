@@ -11,6 +11,7 @@ import sys
 import importlib
 import subprocess
 import os
+from meg_classifier.models.components.signal_adapters import DenoisedDatasetWrapper
 
 # Add parent directory to path for meg_classifier imports
 sys.path.append(str(Path(__file__).parent.parent))
@@ -303,6 +304,19 @@ def main(args):
         tmax=data_config['tmax'],
         standardize=False
     )
+    if args.use_denoising:
+        try: 
+            holdout_dataset = DenoisedDatasetWrapper(
+                dataset=holdout_dataset,
+                wavelet=args.wavelet,
+                level=args.denoise_level,
+                threshold_type=args.threshold_type,
+                denoise_percentage=args.denoise_strength,
+                preserve_scale=args.preserve_scale
+        )
+        except Exception as e: 
+            print(f"Cannot access denoised wrapper as: {str(e)}. Default to no additional dataset wrapper.")
+            pass 
     
     print(f"Dataset loaded: {len(holdout_dataset)} segments")
     print(f"Each segment shape: {holdout_dataset[0].shape}")  # Should be (306, 125)
@@ -411,6 +425,42 @@ if __name__ == "__main__":
         "--no-wait",
         action="store_true",
         help="Don't wait for evaluation results after submission (default: wait for results)"
+    )
+    parser.add_argument(
+        "--use-denoising",
+        action="store_true",
+        help="Apply wavelet denoising to holdout data"
+    )
+    parser.add_argument(
+        "--wavelet",
+        type=str,
+        default='db4',
+        help="Wavelet type for denoising (default: db4)"
+    )
+    parser.add_argument(
+        "--denoise-level",
+        type=int,
+        default=3,
+        help="Wavelet decomposition level (default: 3)"
+    )
+    parser.add_argument(
+        "--threshold-type",
+        type=str,
+        default='soft',
+        choices=['soft', 'hard'],
+        help="Thresholding type (default: soft)"
+    )
+    parser.add_argument(
+        "--denoise-strength",
+        type=float,
+        default=0.6,
+        help="Denoising strength 0-1 (default: 0.8, lower=less denoising)"
+    )
+    parser.add_argument(
+        "--preserve-scale",
+        action="store_true",
+        default=True,
+        help="Preserve original signal scale after denoising"
     )
     
     args = parser.parse_args()

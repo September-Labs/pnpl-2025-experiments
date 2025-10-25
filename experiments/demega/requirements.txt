@@ -8,6 +8,7 @@ numpy>=1.24.0
 h5py>=3.0.0
 pandas>=2.0.0
 pyyaml>=6.0
+PyWavelets==1.8.0
 
 # PNPL library for MEG data loading (September Labs fork)
 pnpl @ git+https://github.com/September-Labs/pnpl.git
