@@ -77,3 +77,6 @@ submissions/
 tmp/
 temp/
 .tmp/
+
+# Training
+preprocessed_data/
