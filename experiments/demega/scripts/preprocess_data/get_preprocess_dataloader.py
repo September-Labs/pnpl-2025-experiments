@@ -278,10 +278,186 @@ def create_dataloaders_preprocessed(config, preprocessed_dir, config_path):
     return train_loader, val_loader, test_loader
 
 
+### TEMPORARILY COMMENTED OUT, TESTING ANOTHER VERSION WITH A BETTER DATA HANDLING BELOW ###
+
+# def create_dataloaders_multi_preprocessed(config, preprocessed_root, preprocessed_dirs):
+#     """Create dataloaders from multiple preprocessed datasets."""
+#     print("="*80)
+#     print("LOADING MULTIPLE PREPROCESSED DATASETS")
+#     print("="*80)
+#     print(f"Preprocessed root: {preprocessed_root}")
+#     print(f"Number of datasets: {len(preprocessed_dirs)}")
+#     print(f"Datasets: {preprocessed_dirs}")
+#     print("="*80 + "\n")
+#     
+#     training_config = config['training']
+#     data_config = config['data']
+#     load_to_memory = data_config.get('load_to_memory', False)
+#     
+#     # Lists to collect datasets from all directories
+#     train_datasets = []
+#     val_datasets = []
+#     test_datasets = []
+#     
+#     # Load datasets from each directory
+#     train_path, val_path, test_path =  None, None, None
+#     for idx, dir_name in enumerate(preprocessed_dirs, 1):
+#     
+#         if os.path.exists(dir_name):
+#             preprocessed_dir = Path(dir_name)
+#         else:
+#             preprocessed_dir = preprocessed_root / dir_name
+#         
+#         print(f"\n[{idx}/{len(preprocessed_dirs)}] Loading from: {dir_name}")
+#         print("-" * 60)
+#         
+#         # Check if preprocessed files exist
+#         train_path = preprocessed_dir / 'train_grouped.h5'
+#         val_path = preprocessed_dir / 'validation_grouped.h5' 
+#         test_path = preprocessed_dir / 'test_grouped.h5'
+#         
+#         if not train_path.exists():
+#             print(f"⚠️  WARNING: Train file not found: {train_path}")
+#             print(f"   Skipping this dataset...")
+#             continue
+#         
+#         if not val_path.exists():
+#             print(f"⚠️  WARNING: Validation file not found: {val_path}")
+#             print(f"   Skipping this dataset...")
+#             continue
+#             
+#         if not test_path.exists():
+#             print(f"⚠️  WARNING: Test file not found: {test_path}")
+#             print(f"   Skipping this dataset...")
+#             continue
+#         
+#         # Load datasets
+#         try:
+#             train_dataset = GroupedDataset(
+#                 preprocessed_path=train_path,
+#                 load_to_memory=load_to_memory
+#             )
+#             train_datasets.append(train_dataset)
+#             print(f"  ✓ Train: {len(train_dataset)} groups")
+#             
+#         except Exception as e:
+#             print(f"  ✗ Error loading dataset: {e}")
+#             print(f"  Skipping this dataset...")
+#             continue
+#     
+#     # Check if we loaded any datasets
+#     if not train_datasets:
+#         raise ValueError("No valid datasets were loaded! Check your preprocessed_dirs configuration.")
+#     
+#     print("\n" + "="*80)
+#     print("COMBINING DATASETS")
+#     print("="*80)
+#     
+#     val_combined = GroupedDataset(
+#         preprocessed_path=val_path,
+#         load_to_memory=load_to_memory
+#     )
+#     
+#     test_combined = GroupedDataset(
+#         preprocessed_path=test_path,
+#         load_to_memory=load_to_memory
+#     )
+#
+#     
+#     # Combine all datasets
+#     if len(train_datasets) == 1:
+#         print("Only one dataset loaded, using it directly")
+#         train_combined = train_datasets[0]
+#     else:
+#         print(f"Combining {len(train_datasets)} datasets using ConcatDataset")
+#         train_combined = ConcatDataset(train_datasets)
+#     
+#     print(f"\nCombined dataset sizes:")
+#     print(f"  Train: {len(train_combined)} groups")
+#     print(f"  Val: {len(val_combined)} groups")
+#     print(f"  Test: {len(test_combined)} groups")
+#     
+#     # Check if we should add holdout data with pseudo-labels
+#     holdout_config = config.get('holdout', {})
+#     if holdout_config.get('use_holdout', False):
+#         print("\n" + "="*80)
+#         print("⚠️  PSEUDO-LABELING ENABLED: Adding holdout data to training set")
+#         print("="*80)
+#         
+#         # Load holdout with pseudo-labels (not preprocessed)
+#         holdout_dataset = load_holdout_with_pseudolabels(
+#             data_config, 
+#             holdout_config,
+#             channel_means=None,
+#             channel_stds=None
+#         )
+#         
+#         # Apply signal averaging to holdout data to match preprocessed format
+#         if data_config.get('use_signal_averaging', True):
+#             print("\nApplying signal averaging to holdout dataset...")
+#             holdout_dataset = GroupedDataset(
+#                 holdout_dataset,
+#                 grouped_samples=1,
+#                 shuffle_seed=data_config.get('shuffle_seed', 777)
+#             )
+#         
+#         # Concatenate training and holdout datasets
+#         print(f"\nCombining with holdout data:")
+#         print(f"  Combined training groups: {len(train_combined)}")
+#         print(f"  Holdout groups (pseudo-labeled): {len(holdout_dataset)}")
+#         
+#         train_combined = ConcatDataset([train_combined, holdout_dataset])
+#         print(f"  Final total: {len(train_combined)} groups")
+#     
+#     print("="*80 + "\n")
+#     
+#     # Combine val and test
+#     val_combined = ConcatDataset([val_combined, test_combined])
+#     
+#     # Create weighted sampler for training data
+#     use_weighted_sampling = training_config.get('use_weighted_sampling', True)
+#     train_sampler = create_weighted_sampler(train_combined, use_weighted_sampling)
+#     
+#     print(f"Train Sampler: {train_sampler}")
+#     
+#     # Create dataloaders with optimized settings
+#     train_loader = DataLoader(
+#         train_combined,
+#         batch_size=training_config['batch_size'],
+#         shuffle=(train_sampler is None),
+#         sampler=train_sampler,
+#         num_workers=min(training_config['num_workers'], 8),
+#         pin_memory=True,
+#         persistent_workers=True if training_config['num_workers'] > 0 else False
+#     )
+#     
+#     val_loader = DataLoader(
+#         val_combined,
+#         batch_size=training_config['batch_size'],
+#         shuffle=False,
+#         num_workers=min(training_config['num_workers'], 8),
+#         pin_memory=True,
+#         persistent_workers=True if training_config['num_workers'] > 0 else False
+#     )
+#     
+#     test_loader = DataLoader(
+#         test_combined,
+#         batch_size=training_config['batch_size'],
+#         shuffle=False,
+#         num_workers=min(training_config['num_workers'], 8),
+#         pin_memory=True,
+#         persistent_workers=True if training_config['num_workers'] > 0 else False
+#     )
+#     
+#     return train_loader, val_loader, test_loader
+
+
+### UPDATED VERSION, INSTEAD OF LATEST DATA LOAD USES ALL DATA FROM ALL BASE MODELS, ###
+### SHOULD WORK BETTER, DISABLE IF THINGS GO WRONG ###
 def create_dataloaders_multi_preprocessed(config, preprocessed_root, preprocessed_dirs):
     """Create dataloaders from multiple preprocessed datasets."""
     print("="*80)
-    print("LOADING MULTIPLE PREPROCESSED DATASETS")
+    print("LOADING MULTIPLE PREPROCESSED DATASETS (FIXED)")
     print("="*80)
     print(f"Preprocessed root: {preprocessed_root}")
     print(f"Number of datasets: {len(preprocessed_dirs)}")
@@ -298,7 +474,8 @@ def create_dataloaders_multi_preprocessed(config, preprocessed_root, preprocesse
     test_datasets = []
     
     # Load datasets from each directory
-    train_path, val_path, test_path =  None, None, None
+    # train_path, val_path, test_path =  None, None, None # This line is not needed
+    
     for idx, dir_name in enumerate(preprocessed_dirs, 1):
     
         if os.path.exists(dir_name):
@@ -337,6 +514,22 @@ def create_dataloaders_multi_preprocessed(config, preprocessed_root, preprocesse
             )
             train_datasets.append(train_dataset)
             print(f"  ✓ Train: {len(train_dataset)} groups")
+
+            # <-- EDIT: Load and append val dataset -->
+            val_dataset = GroupedDataset(
+                preprocessed_path=val_path,
+                load_to_memory=load_to_memory
+            )
+            val_datasets.append(val_dataset)
+            print(f"  ✓ Val: {len(val_dataset)} groups")
+
+            # <-- EDIT: Load and append test dataset -->
+            test_dataset = GroupedDataset(
+                preprocessed_path=test_path,
+                load_to_memory=load_to_memory
+            )
+            test_datasets.append(test_dataset)
+            print(f"  ✓ Test: {len(test_dataset)} groups")
             
         except Exception as e:
             print(f"  ✗ Error loading dataset: {e}")
@@ -351,24 +544,22 @@ def create_dataloaders_multi_preprocessed(config, preprocessed_root, preprocesse
     print("COMBINING DATASETS")
     print("="*80)
     
-    val_combined = GroupedDataset(
-        preprocessed_path=val_path,
-        load_to_memory=load_to_memory
-    )
-    
-    test_combined = GroupedDataset(
-        preprocessed_path=test_path,
-        load_to_memory=load_to_memory
-    )
+    ### Remove buggy single-dataset loads##
+    # val_combined = GroupedDataset(...)
+    # test_combined = GroupedDataset(...)
 
     
     # Combine all datasets
     if len(train_datasets) == 1:
         print("Only one dataset loaded, using it directly")
         train_combined = train_datasets[0]
+        val_combined = val_datasets[0]
+        test_combined = test_datasets[0]
     else:
         print(f"Combining {len(train_datasets)} datasets using ConcatDataset")
         train_combined = ConcatDataset(train_datasets)
+        val_combined = ConcatDataset(val_datasets)
+        test_combined = ConcatDataset(test_datasets)
     
     print(f"\nCombined dataset sizes:")
     print(f"  Train: {len(train_combined)} groups")
@@ -409,7 +600,7 @@ def create_dataloaders_multi_preprocessed(config, preprocessed_root, preprocesse
     
     print("="*80 + "\n")
     
-    # Combine val and test
+    # Combine val and test (This is your intended leakage)
     val_combined = ConcatDataset([val_combined, test_combined])
     
     # Create weighted sampler for training data

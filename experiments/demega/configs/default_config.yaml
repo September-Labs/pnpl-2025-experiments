@@ -20,6 +20,12 @@ data:
   #   --use_huggingface --grouping_level 100 --local_dir ./data
   # Available grouping levels: 5, 10, 15, 20, 25, 30, 35, 45, 50, 55, 60, 100
 
+holdout:
+  use_holdout: true # Enable holdout dataset
+  pseudo_labels_csv: "" 
+  task: "phoneme"
+  confidence_threshold: 0.25  # Optional: minimum confidence to include (0.0 = include all)
+
 training:
   max_epochs: 5  # Adjust based on your needs
   batch_size: 512
