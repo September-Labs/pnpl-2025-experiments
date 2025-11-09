@@ -77,3 +77,7 @@ submissions/
 tmp/
 temp/
 .tmp/
+
+# Training
+preprocessed_data/
+experiments/demega/experiments/

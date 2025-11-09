@@ -13,10 +13,18 @@ data:
   grouped_samples: 100  # Group average for better SNR (only used for raw data loading)
   shuffle_seed: 777  # For reproducible shuffling
   load_to_memory: true  # Load entire dataset to RAM for faster access
-
+  
+  # preprocessed_dir: ./ # where the grouped averaging data will be stored
+  
   # NOTE: To use preprocessed h5 files from HuggingFace, use CLI flags:
   #   --use_huggingface --grouping_level 100 --local_dir ./data
   # Available grouping levels: 5, 10, 15, 20, 25, 30, 35, 45, 50, 55, 60, 100
+
+holdout:
+  use_holdout: true # Enable holdout dataset
+  pseudo_labels_csv: "" 
+  task: "phoneme"
+  confidence_threshold: 0.25  # Optional: minimum confidence to include (0.0 = include all)
 
 training:
   max_epochs: 5  # Adjust based on your needs

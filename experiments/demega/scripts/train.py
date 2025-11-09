@@ -18,6 +18,7 @@ from lightning.pytorch.loggers import TensorBoardLogger, CSVLogger, WandbLogger
 from lightning.pytorch.callbacks import ModelCheckpoint, EarlyStopping, StochasticWeightAveraging
 from pnpl.datasets import LibriBrainPhoneme, GroupedDataset
 import importlib
+from .preprocess_data.get_preprocess_dataloader import create_dataloaders_multi_preprocessed, create_dataloaders_preprocessed
 
 # Add parent directory to path
 sys.path.append(str(Path(__file__).parent.parent))
@@ -32,7 +33,7 @@ def load_config(config_path):
 
 
 def create_dataloaders(config, use_huggingface=False, grouping_level=100,
-                       local_dir="./data", force_download=False):
+                       local_dir="./data", force_download=False, config_path: None | str = None, use_preprocessed: bool = False):
     """Create training and validation dataloaders.
 
     Args:
@@ -85,6 +86,21 @@ def create_dataloaders(config, use_huggingface=False, grouping_level=100,
                 )
         else:
             print(f"Using existing h5 files from {h5_dir}")
+
+
+        if use_preprocessed: # Assume the user created its own preprocessed data 
+            # Handle both single and multiple preprocessed directories
+            preprocessed_root = Path(data_config.get('preprocessed_root', './preprocessed_data'))
+            preprocessed_dirs = data_config.get('preprocessed_dirs', None)
+            
+            if preprocessed_dirs:
+                # Multiple directories specified
+                return create_dataloaders_multi_preprocessed(config, preprocessed_root, preprocessed_dirs)
+            else:
+                # Single directory (backward compatibility)
+                preprocessed_dir = Path(data_config.get('preprocessed_dir', './preprocessed_data'))
+                return create_dataloaders_preprocessed(config, preprocessed_dir, config_path)
+
 
         # Load datasets from h5 files
         load_to_memory = data_config.get('load_to_memory', True)
@@ -199,7 +215,7 @@ def create_dataloaders(config, use_huggingface=False, grouping_level=100,
     print(f"Training samples: {len(train_dataset)}")
     print(f"Validation samples: {len(val_dataset)}")
 
-    return train_loader, val_loader
+    return train_loader, val_loader, None 
 
 def create_model(config):
     """Create model instance from configuration."""
@@ -254,12 +270,14 @@ def main(args):
     L.seed_everything(config['training'].get('seed', 42))
 
     # Create dataloaders
-    train_loader, val_loader = create_dataloaders(
+    train_loader, val_loader, test_loader = create_dataloaders(
         config,
         use_huggingface=args.use_huggingface,
         grouping_level=args.grouping_level,
         local_dir=args.local_dir,
-        force_download=args.download
+        force_download=args.download,
+        config_path=config_path,
+        use_preprocessed=args.use_preprocessed,
     )
     
     # Create model
@@ -409,6 +427,12 @@ if __name__ == "__main__":
         "--download",
         action="store_true",
         help="Force download from HuggingFace even if files exist locally"
+    )
+
+    parser.add_argument(
+        "--use_preprocessed",
+        action="store_true",
+        help="Use data locally pre-processed by the corresponding group averaging script"
     )
 
     args = parser.parse_args()
