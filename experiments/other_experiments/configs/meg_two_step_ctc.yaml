@@ -1,6 +1,6 @@
 # Stage 1: Train 5-class category classifier
 data:
-  data_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/libribrain/data"
+  data_path: "<DATA_ROOT>/libribrain/data"
   tmin: 0.0
   tmax: 0.5
   use_subset: false
@@ -8,7 +8,7 @@ data:
   grouped_samples: 100
   shuffle_seed: 777
   use_preprocessed: true
-  preprocessed_dir: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/preprocessed_data_tmax0_5_grouped100_80_10_10"
+  preprocessed_dir: "<DATA_ROOT>/preprocessed_data_tmax0_5_grouped100_80_10_10"
   load_to_memory: true
 
 training:
@@ -24,10 +24,10 @@ training:
   accumulate_grad_batches: 1
   use_early_stopping: true
   early_stopping_patience: 20
-  save_dir: "/home/s8l/remote_storage/aleks/competitions/libribrain/models/meg_sequential_stage1_081225v0"
+  save_dir: "<MODEL_ROOT>/models/meg_sequential_stage1_081225v0"
 
 logging:
-  log_dir: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/lightning_logs"
+  log_dir: "<DATA_ROOT>/lightning_logs"
   use_tensorboard: true
   wandb:
     project: "libribrain-phoneme-classification"

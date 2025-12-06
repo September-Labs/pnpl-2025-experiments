@@ -1,7 +1,7 @@
 # Default configuration for phoneme classification training
 
 data:
-  data_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/libribrain/data"
+  data_path: "<DATA_ROOT>/libribrain/data"
   tmin: 0.0
   tmax: 0.5
   use_subset: false  # Set to false for full training data
@@ -27,7 +27,7 @@ training:
   accumulate_grad_batches: 1
   use_early_stopping: false
   early_stopping_patience: 50
-  save_dir: "/home/s8l/remote_storage/aleks/competitions/libribrain/models/conv_lstm_phoneme_091225v1"
+  save_dir: "<MODEL_ROOT>/models/conv_lstm_phoneme_091225v1"
 
 logging:
   log_dir: "./lightning_logs"

@@ -2,7 +2,7 @@
 # Tests the hypothesis: 8 articulatory features > 39 direct phoneme classes
 
 data:
-  data_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/libribrain/data"
+  data_path: "<DATA_ROOT>/libribrain/data"
   tmin: 0.0
   tmax: 0.5  # 125 time points at 250Hz
   use_subset: false  # Use full training data
@@ -28,12 +28,12 @@ training:
   accumulate_grad_batches: 1
   use_early_stopping: true
   early_stopping_patience: 10
-  save_dir: "/home/s8l/remote_storage/aleks/competitions/libribrain/models/phonetic_features_experiment_082525v2"
+  save_dir: "<MODEL_ROOT>/models/phonetic_features_experiment_082525v2"
   label_smoothing: 0.05  # Mild smoothing for feature learning
   use_swa: false
 
 logging:
-  log_dir: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/lightning_logs"
+  log_dir: "<DATA_ROOT>/lightning_logs"
   use_tensorboard: true
   wandb:
     project: "libribrain-phoneme-decomposition"
@@ -78,5 +78,5 @@ evaluation:
 submission:
   batch_size: 64
   num_workers: 32
-  output_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/phonetic_features_experiment_082525v2_submission.csv"
+  output_path: "<DATA_ROOT>/phonetic_features_experiment_082525v2_submission.csv"
   holdout_task: "phoneme"

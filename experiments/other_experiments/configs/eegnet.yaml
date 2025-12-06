@@ -1,7 +1,7 @@
 # Comprehensive configuration for Integrated PySeizure Phoneme Classifier
 
 data:
-  data_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/libribrain/data"
+  data_path: "<DATA_ROOT>/libribrain/data"
   tmin: 0.0
   tmax: 0.5
   use_subset: false
@@ -10,7 +10,7 @@ data:
   shuffle_seed: 777
 
   use_preprocessed: true
-  preprocessed_dir: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/preprocessed_data_tmax0_5_grouped100"  # Need to regenerate with grouped_samples=25
+  preprocessed_dir: "<DATA_ROOT>/preprocessed_data_tmax0_5_grouped100"  # Need to regenerate with grouped_samples=25
   load_to_memory: true
 
 training:
@@ -25,7 +25,7 @@ training:
   accumulate_grad_batches: 1
   use_early_stopping: true
   early_stopping_patience: 10
-  save_dir: "/home/s8l/remote_storage/aleks/competitions/libribrain/models/eegnet_081425v1"
+  save_dir: "<MODEL_ROOT>/models/eegnet_081425v1"
 
 logging:
   use_tensorboard: true
@@ -169,5 +169,5 @@ evaluation:
 submission:
   batch_size: 64
   num_workers: 32
-  output_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/eegnet_081425v1_submission.csv"
+  output_path: "<DATA_ROOT>/eegnet_081425v1_submission.csv"
   holdout_task: "phoneme"

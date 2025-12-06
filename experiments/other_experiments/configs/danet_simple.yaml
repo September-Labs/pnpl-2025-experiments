@@ -1,5 +1,5 @@
 data:
-  data_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/libribrain/data"
+  data_path: "<DATA_ROOT>/libribrain/data"
   tmin: 0.0
   tmax: 0.5  # 0.5 seconds for 125 time points at 250Hz
   use_subset: false  # Set to false for full training data
@@ -9,7 +9,7 @@ data:
 
   # Preprocessing options
   use_preprocessed: true  # Set to true to use preprocessed data (much faster)
-  preprocessed_dir: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/preprocessed_data_tmax0_5_grouped100"
+  preprocessed_dir: "<DATA_ROOT>/preprocessed_data_tmax0_5_grouped100"
   load_to_memory: true  # Load entire dataset to RAM (faster but uses more memory)
 
 training:
@@ -26,10 +26,10 @@ training:
   use_early_stopping: true
   early_stopping_patience: 20
   label_smoothing: 0.01 
-  save_dir: "/home/s8l/remote_storage/aleks/competitions/libribrain/models/danet_simple_081425v1"
+  save_dir: "<MODEL_ROOT>/models/danet_simple_081425v1"
 
 logging:
-  log_dir: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/lightning_logs"
+  log_dir: "<DATA_ROOT>/lightning_logs"
   use_tensorboard: true
   wandb:
     project: "libribrain-phoneme-classification"
@@ -55,7 +55,7 @@ model:
     danet_kernel_size: 125       # Kernel size for DAnet (matches time points)
     
     # Pre-training management
-    danet_pretrained_dir: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/checkpoints/danet"
+    danet_pretrained_dir: "<DATA_ROOT>/checkpoints/danet"
     danet_pretrain_epochs: 10    # Epochs for unsupervised pre-training
     danet_pretrain_batch_size: 128  # Batch size for pre-training
     force_retrain_danet: true   # Set to true to force re-training even if weights exist
@@ -65,7 +65,7 @@ model:
     dropout: 0.2                  # Dropout in classifier
     
     # Data paths for automatic pre-training (uses same as main data config)
-    data_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/preprocessed_data_tmax0_5_grouped100"
+    data_path: "<DATA_ROOT>/preprocessed_data_tmax0_5_grouped100"
     data_tmin: 0.0
     data_tmax: 0.5
     
@@ -87,5 +87,5 @@ submission:
   # Submission generation settings
   batch_size: 64
   num_workers: 64
-  output_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/danet_simple_081425v1_submission.csv"
+  output_path: "<DATA_ROOT>/danet_simple_081425v1_submission.csv"
   holdout_task: "phoneme"  # Task type for holdout dataset

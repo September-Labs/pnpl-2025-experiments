@@ -1,7 +1,7 @@
 # SEANet Dual-Loss MEG Phoneme Classification Configuration
 # Features encoder-decoder architecture with classification and reconstruction losses
 data:
-  data_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/libribrain/data"
+  data_path: "<DATA_ROOT>/libribrain/data"
   tmin: 0.0
   tmax: 0.5 # 0.5 seconds for 125 time points at 250Hz
   use_subset: false # Set to false for full training data
@@ -28,7 +28,7 @@ training:
   accumulate_grad_batches: 2 # Effective batch size of 256
   use_early_stopping: true
   early_stopping_patience: 15 # More patience for dual-loss convergence
-  save_dir: "/home/s8l/remote_storage/aleks/competitions/libribrain/models/seanet_dual_090725v1"
+  save_dir: "<MODEL_ROOT>/models/seanet_dual_090725v1"
   load_from_checkpoint: true
   checkpoint: /srv/s8l_storage/aleks/competitions/libribrain/models/seanet_dual_090725v1/checkpoints/phoneme-model-epoch=00-val_f1_macro=0.04.ckpt
 
@@ -54,7 +54,7 @@ wandb:
 
 holdout:
   use_holdout: true                    # Enable holdout dataset
-  pseudo_labels_csv: /home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/submissions/ensemble_weighted_probs.csv #"best.csv"        # Path to CSV with predictions
+  pseudo_labels_csv: <DATA_ROOT>/submissions/ensemble_weighted_probs.csv #"best.csv"        # Path to CSV with predictions
   task: "phoneme"         
   confidence_threshold: 0.19  # Optional: minimum confidence to include (0.0 = include all)
 

@@ -2,7 +2,7 @@
 # Based on HRM paper: iterative refinement with deep supervision and ACT
 
 data:
-  data_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/libribrain/data"
+  data_path: "<DATA_ROOT>/libribrain/data"
   tmin: 0.0
   tmax: 0.5  # 0.5 seconds = 125 time points at 250Hz
   use_subset: false  # Set to true for quick testing with subset
@@ -28,7 +28,7 @@ training:
   accumulate_grad_batches: 2  # Effective batch size = 32
   use_early_stopping: true
   early_stopping_patience: 10
-  save_dir: "/home/s8l/remote_storage/aleks/competitions/libribrain/models/outer_loop_082125v0"
+  save_dir: "<MODEL_ROOT>/models/outer_loop_082125v0"
   
   # Stochastic Weight Averaging
   use_swa: true
@@ -38,7 +38,7 @@ training:
   label_smoothing: 0.1
 
 logging:
-  log_dir: "/home/s8l/remote_storage/aleks/competitions/libribrain/models/outer_loop_082125v0/logs"
+  log_dir: "<MODEL_ROOT>/models/outer_loop_082125v0/logs"
   use_tensorboard: true
   wandb:
     project: "libribrain-phoneme-classification"
@@ -108,7 +108,7 @@ submission:
   # Submission generation settings
   batch_size: 32
   num_workers: 8
-  output_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/outer_loop_082125v0_submission.csv"
+  output_path: "<PROJECT_ROOT>/track_2_phoneme_classification/outer_loop_082125v0_submission.csv"
   holdout_task: "phoneme"
   
   # Use best checkpoint

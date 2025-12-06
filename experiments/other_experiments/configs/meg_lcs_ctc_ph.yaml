@@ -1,5 +1,5 @@
 data:
-  data_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/libribrain/data"
+  data_path: "<DATA_ROOT>/libribrain/data"
   tmin: 0.0
   tmax: 0.5  # 0.5 seconds for 125 time points at 250Hz
   use_subset: false
@@ -36,7 +36,7 @@ training:
   use_early_stopping: false
   early_stopping_patience: 10
   early_stopping_min_delta: 0.001
-  save_dir: "/home/s8l/remote_storage/aleks/competitions/libribrain/models/meg_lcs_ctc_v3_081425v8"
+  save_dir: "<MODEL_ROOT>/models/meg_lcs_ctc_v3_081425v8"
   
   # Learning rate scheduler options (new)
   scheduler:
@@ -64,7 +64,7 @@ training:
     amsgrad: true
 
 logging:
-  log_dir: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/lightning_logs"
+  log_dir: "<DATA_ROOT>/lightning_logs"
   use_tensorboard: true
   log_every_n_steps: 50
   wandb:
@@ -129,7 +129,7 @@ model:
     use_dynamic_channels: true
     channel_selection_ratio: 0.7
     channel_selection_strategy: "learned"  # Options: "variance", "learned", "hybrid"
-    coordinate_file: /home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/libribrain/data/sensor_xyz.json
+    coordinate_file: <DATA_ROOT>/libribrain/data/sensor_xyz.json
     
     # Spatial configuration (new)
     spatial_config:
@@ -182,7 +182,7 @@ evaluation:
 submission:
   batch_size: 64
   num_workers: 16
-  output_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/meg_lcs_ctc_v3_081425v8_submission.csv"
+  output_path: "<DATA_ROOT>/meg_lcs_ctc_v3_081425v8_submission.csv"
   holdout_task: "phoneme"
   
   # Test-time augmentation (new)

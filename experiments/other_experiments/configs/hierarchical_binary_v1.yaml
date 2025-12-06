@@ -4,7 +4,7 @@
 # Uses balanced binary splits to handle severe class imbalance
 
 data:
-  data_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/libribrain/data"
+  data_path: "<DATA_ROOT>/libribrain/data"
   tmin: 0.0
   tmax: 0.5  # 125 time points at 250Hz
   use_subset: false  # Use full training data
@@ -32,10 +32,10 @@ training:
   early_stopping_patience: 30
   use_swa: false
   swa_lrs: 0.0005
-  save_dir: "/home/s8l/remote_storage/aleks/competitions/libribrain/models/hierarchical_binary_v1_083125v1"
+  save_dir: "<MODEL_ROOT>/models/hierarchical_binary_v1_083125v1"
 
 logging:
-  log_dir: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/lightning_logs"
+  log_dir: "<DATA_ROOT>/lightning_logs"
   use_tensorboard: true
   wandb:
     project: "libribrain-phoneme-hierarchical"
@@ -71,5 +71,5 @@ evaluation:
 submission:
   batch_size: 64
   num_workers: 32
-  output_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/hierarchical_binary_083125v1_submission.csv"
+  output_path: "<DATA_ROOT>/hierarchical_binary_083125v1_submission.csv"
   holdout_task: "phoneme"

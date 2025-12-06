@@ -1,6 +1,6 @@
 # spatial_dilated.yaml
 data:
-  data_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/libribrain/data"
+  data_path: "<DATA_ROOT>/libribrain/data"
   tmin: 0.0
   tmax: 0.5
   use_subset: false
@@ -29,10 +29,10 @@ training:
   use_swa: false
   swa_lrs: 0.00005
   label_smoothing: 0.1
-  save_dir: "/home/s8l/remote_storage/aleks/competitions/libribrain/models/spatial_dilated_082325v4"
+  save_dir: "<MODEL_ROOT>/models/spatial_dilated_082325v4"
 
 logging:
-  log_dir: "/home/s8l/remote_storage/aleks/competitions/libribrain/models/spatial_dilated_082325v4/logs"
+  log_dir: "<MODEL_ROOT>/models/spatial_dilated_082325v4/logs"
   use_tensorboard: true
   wandb:
     project: "libribrain-phoneme-classification"
@@ -56,7 +56,7 @@ model:
     spatial_output_channels: 306 # can try 306
     fourier_harmonics: 128
     spatial_dropout_radius: 0.1
-    sensor_coordinates_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/libribrain/data/sensor_xyz.json"
+    sensor_coordinates_path: "<DATA_ROOT>/libribrain/data/sensor_xyz.json"
     
     # Convolutional architecture
     hidden_channels: 640
@@ -82,5 +82,5 @@ evaluation:
 submission:
   batch_size: 64
   num_workers: 32
-  output_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/spatial_dilated_082325v4_submission.csv"
+  output_path: "<PROJECT_ROOT>/track_2_phoneme_classification/spatial_dilated_082325v4_submission.csv"
   holdout_task: "phoneme"

@@ -2,7 +2,7 @@
 # Uses multiple pre-grouped datasets (5, 10, 25, 50, 100 samples)
 
 data:
-  data_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/libribrain/data"
+  data_path: "<DATA_ROOT>/libribrain/data"
   tmin: 0.0
   tmax: 0.5  # 0.5 seconds for 125 time points at 250Hz
   
@@ -32,11 +32,11 @@ training:
   early_stopping_patience: 5
   use_swa: true
   swa_lrs: 0.00001
-  save_dir: "/home/s8l/remote_storage/aleks/competitions/libribrain/models/scales_082125v4"
+  save_dir: "<MODEL_ROOT>/models/scales_082125v4"
   label_smoothing: 0.2  # Add some smoothing for multi-scale robustness
 
 logging:
-  log_dir: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/lightning_logs"
+  log_dir: "<DATA_ROOT>/lightning_logs"
   use_tensorboard: true
   wandb:
     project: "libribrain-phoneme-classification"
@@ -81,5 +81,5 @@ evaluation:
 submission:
   batch_size: 64
   num_workers: 16
-  output_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/scales_082125v4_submission.csv"
+  output_path: "<PROJECT_ROOT>/track_2_phoneme_classification/scales_082125v4_submission.csv"
   holdout_task: "phoneme"

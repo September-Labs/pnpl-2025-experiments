@@ -2,7 +2,7 @@
 # This config uses the YOLO backbone adapted for MEG signal processing
 
 data:
-  data_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/libribrain/data"
+  data_path: "<DATA_ROOT>/libribrain/data"
   tmin: 0.0
   tmax: 0.5  # 0.5 seconds for 125 time points at 250Hz
   use_subset: false  # Set to true for quick testing with Sherlock1 only
@@ -32,7 +32,7 @@ training:
   use_swa: true  # Stochastic Weight Averaging for better generalization
   swa_lrs: 0.0001  # SWA learning rate
   label_smoothing: 0.1  # Label smoothing for better generalization
-  save_dir: "/home/s8l/remote_storage/aleks/competitions/libribrain/models/ihor_yolo_meg_phoneme_092025v0"
+  save_dir: "<MODEL_ROOT>/models/ihor_yolo_meg_phoneme_092025v0"
 
 logging:
   log_dir: "./lightning_logs"

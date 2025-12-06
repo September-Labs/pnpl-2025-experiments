@@ -2,7 +2,7 @@
 # Configuration for high-performance simplified MEG phoneme classifier
 
 data:
-  data_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/libribrain/data"
+  data_path: "<DATA_ROOT>/libribrain/data"
   tmin: 0.0
   tmax: 0.5  # 125 time points at 250Hz
   use_subset: false
@@ -32,10 +32,10 @@ training:
   early_stopping_patience: 25
   use_swa: true
   swa_lrs: 0.0001
-  save_dir: "/home/s8l/remote_storage/aleks/competitions/libribrain/models/prototype_network_082325v2"
+  save_dir: "<MODEL_ROOT>/models/prototype_network_082325v2"
 
 logging:
-  log_dir: "/home/s8l/remote_storage/aleks/competitions/libribrain/models/prototype_network_082325v2/logs"
+  log_dir: "<MODEL_ROOT>/models/prototype_network_082325v2/logs"
   use_tensorboard: true
   wandb:
     project: "libribrain-phoneme-classification"
@@ -85,5 +85,5 @@ evaluation:
 submission:
   batch_size: 128
   num_workers: 32
-  output_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/prototype_network_082325v2_submission.csv"
+  output_path: "<PROJECT_ROOT>/track_2_phoneme_classification/prototype_network_082325v2_submission.csv"
   holdout_task: "phoneme"

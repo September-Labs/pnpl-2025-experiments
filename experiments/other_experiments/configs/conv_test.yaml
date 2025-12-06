@@ -2,7 +2,7 @@
 # Works with existing train.py script
 
 data:
-  data_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/libribrain/data"
+  data_path: "<DATA_ROOT>/libribrain/data"
   tmin: 0.0
   tmax: 0.5  # 125 time points at 250Hz
   use_subset: false  # Use full training data
@@ -30,7 +30,7 @@ training:
   early_stopping_patience: 10
   use_swa: false
   swa_lrs: 0.00001
-  save_dir: "/home/s8l/remote_storage/aleks/competitions/libribrain/models/conv_trans_test"
+  save_dir: "<MODEL_ROOT>/models/conv_trans_test"
   label_smoothing: 0.1  # Also passed to model
 
 model:
@@ -69,7 +69,7 @@ model:
 
 logging:
   use_tensorboard: true
-  log_dir: "/home/s8l/remote_storage/aleks/competitions/libribrain/models/conv_trans_test/logs"
+  log_dir: "<MODEL_ROOT>/models/conv_trans_test/logs"
   wandb:
     project: "libribrain-phoneme-classification"
     entity: "september-labs"  # Replace with your entity
@@ -89,5 +89,5 @@ evaluation:
 submission:
   batch_size: 64
   num_workers: 4
-  output_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/conv_trans_test.csv"
+  output_path: "<PROJECT_ROOT>/track_2_phoneme_classification/conv_trans_test.csv"
   holdout_task: "phoneme"

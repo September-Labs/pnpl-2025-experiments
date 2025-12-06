@@ -2,7 +2,7 @@
 # Captures phoneme bleed-over and uses transition probabilities to boost predictions
 
 data:
-  data_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/libribrain/data"
+  data_path: "<DATA_ROOT>/libribrain/data"
   tmin: 0.0
   tmax: 0.5  # 0.5 seconds for 125 time points at 250Hz
   use_subset: false  # Set to false for full training data
@@ -28,7 +28,7 @@ training:
   accumulate_grad_batches: 3
   use_early_stopping: false  # No early stopping as per successful config
   early_stopping_patience: 15
-  save_dir: "/home/s8l/remote_storage/aleks/competitions/libribrain/models/temporal_triangulation_enhanced_090825v0"
+  save_dir: "<MODEL_ROOT>/models/temporal_triangulation_enhanced_090825v0"
   
   # Checkpoint settings
   checkpoint:
@@ -39,7 +39,7 @@ training:
     verbose: true
 
 logging:
-  log_dir: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/lightning_logs"
+  log_dir: "<DATA_ROOT>/lightning_logs"
   use_tensorboard: true
   log_every_n_steps: 50
   wandb:
@@ -104,5 +104,5 @@ submission:
   # Submission generation settings
   batch_size: 64
   num_workers: 32
-  output_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/submissions/temporal_triangulation_enhanced_090825v0_submission.csv"
+  output_path: "<DATA_ROOT>/submissions/temporal_triangulation_enhanced_090825v0_submission.csv"
   holdout_task: "phoneme"  # Task type for holdout dataset

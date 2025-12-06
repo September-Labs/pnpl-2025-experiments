@@ -2,7 +2,7 @@
 # Full configuration with all enhancement options
 
 data:
-  data_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/libribrain/data"
+  data_path: "<DATA_ROOT>/libribrain/data"
   tmin: 0.0
   tmax: 0.5
   use_subset: false  # Set to false for full training data
@@ -12,7 +12,7 @@ data:
   
   # Preprocessing options
   use_preprocessed: true  # Set to true to use preprocessed data (much faster)
-  preprocessed_dir: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/preprocessed_data_tmax0_5_grouped100"
+  preprocessed_dir: "<DATA_ROOT>/preprocessed_data_tmax0_5_grouped100"
   load_to_memory: true  # Load entire dataset to RAM (faster but uses more memory)
 
 training:
@@ -31,10 +31,10 @@ training:
   label_smoothing: 0.02
   use_swa: false # Stochastic Weight Averaging (SWA)
   swa_lrs: 0.001
-  save_dir: "/home/s8l/remote_storage/aleks/competitions/libribrain/models/bm_meg_lcs_ctc_v2_081225v1_no_swa_fp32_shorttrain_tiny"
+  save_dir: "<MODEL_ROOT>/models/bm_meg_lcs_ctc_v2_081225v1_no_swa_fp32_shorttrain_tiny"
 
 logging:
-  log_dir: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/lightning_logs"
+  log_dir: "<DATA_ROOT>/lightning_logs"
   use_tensorboard: true
   wandb:
     project: "libribrain-phoneme-classification"
@@ -125,7 +125,7 @@ submission:
   # Submission generation settings
   batch_size: 32
   num_workers: 64
-  output_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/bm_meg_lcs_ctc_081225v1_submission.csv"
+  output_path: "<DATA_ROOT>/bm_meg_lcs_ctc_081225v1_submission.csv"
   holdout_task: "phoneme"  # Task type for holdout dataset
   
   # Enhanced submission options

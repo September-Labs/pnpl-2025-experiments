@@ -1,6 +1,6 @@
 # separate_phoneme_models.yaml
 data:
-  data_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/libribrain/data"
+  data_path: "<DATA_ROOT>/libribrain/data"
   tmin: 0.0
   tmax: 0.5
   use_subset: false
@@ -27,10 +27,10 @@ training:
   use_early_stopping: true
   early_stopping_patience: 15  # More patience for rare phonemes
   use_swa: false  # Disable for individual models
-  save_dir: "/home/s8l/remote_storage/aleks/competitions/libribrain/models/little_classifiers_082325v0"
+  save_dir: "<MODEL_ROOT>/models/little_classifiers_082325v0"
 
 logging:
-  log_dir: "/home/s8l/remote_storage/aleks/competitions/libribrain/models/little_classifiers_082325v0/logs"
+  log_dir: "<MODEL_ROOT>/models/little_classifiers_082325v0/logs"
   use_tensorboard: true
   wandb:
     project: "libribrain-phoneme-classification"
@@ -65,5 +65,5 @@ evaluation:
 submission:
   batch_size: 256
   num_workers: 32
-  output_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/little_classifiers_082325v0_submission.csv"
+  output_path: "<PROJECT_ROOT>/track_2_phoneme_classification/little_classifiers_082325v0_submission.csv"
   holdout_task: "phoneme"

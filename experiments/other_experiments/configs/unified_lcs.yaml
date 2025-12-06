@@ -1,6 +1,6 @@
 # unified_three_stage.yaml
 data:
-  data_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/libribrain/data"
+  data_path: "<DATA_ROOT>/libribrain/data"
   tmin: 0.0
   tmax: 0.5
   use_subset: false
@@ -9,7 +9,7 @@ data:
   shuffle_seed: 777
   
   use_preprocessed: true
-  preprocessed_dir: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/preprocessed_data_tmax0_5_grouped100"
+  preprocessed_dir: "<DATA_ROOT>/preprocessed_data_tmax0_5_grouped100"
   load_to_memory: true
 
 training:
@@ -25,11 +25,11 @@ training:
   gradient_clip_val: 1.0
   accumulate_grad_batches: 1
   use_early_stopping: false  # Disable for stage training
-  save_dir: "/home/s8l/remote_storage/aleks/competitions/libribrain/models/unified_lcs_082025v1_s2"
+  save_dir: "<MODEL_ROOT>/models/unified_lcs_082025v1_s2"
   use_swa: false  # Disable SWA for cleaner stage training
 
 logging:
-  log_dir: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/lightning_logs"
+  log_dir: "<DATA_ROOT>/lightning_logs"
   use_tensorboard: true
   wandb:
     project: "libribrain-phoneme-specialist"
@@ -75,10 +75,10 @@ model:
     specialist_weight: 0.3
     main_model_weight: 0.7
     
-    sensor_importance_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/meta/sensor_phoneme_analysis_results/sensor_importance_matrix.csv"
-    region_importance_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/meta/sensor_phoneme_analysis_results/region_importance_matrix.csv"
-    phoneme_summary_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/meta/sensor_phoneme_analysis_results/phoneme_summary.csv"
-    phoneme_counts_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/phoneme_weights/phoneme_weights.json"
+    sensor_importance_path: "<DATA_ROOT>/meta/sensor_phoneme_analysis_results/sensor_importance_matrix.csv"
+    region_importance_path: "<DATA_ROOT>/meta/sensor_phoneme_analysis_results/region_importance_matrix.csv"
+    phoneme_summary_path: "<DATA_ROOT>/meta/sensor_phoneme_analysis_results/phoneme_summary.csv"
+    phoneme_counts_path: "<DATA_ROOT>/phoneme_weights/phoneme_weights.json"
 
     # Checkpoint paths (update these for stage 2 and 3)
     pretrained_main_path: /srv/s8l_storage/aleks/competitions/libribrain/models/unified_lcs_082025v1/checkpoints/phoneme-model-epoch=09-val_f1_macro=0.62.ckpt  # Set after stage 1
@@ -96,5 +96,5 @@ evaluation:
 submission:
   batch_size: 64
   num_workers: 32
-  output_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/unified_lcs_082025v1_s2_submission.csv"
+  output_path: "<DATA_ROOT>/unified_lcs_082025v1_s2_submission.csv"
   holdout_task: "phoneme"

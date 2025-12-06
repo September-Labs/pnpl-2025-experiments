@@ -1,5 +1,5 @@
 data:
-  data_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/libribrain/data"
+  data_path: "<DATA_ROOT>/libribrain/data"
   tmin: 0.0
   tmax: 0.5  # 0.5 seconds for 125 time points at 250Hz
   use_subset: true  # Set to false for full training data
@@ -25,11 +25,11 @@ training:
   accumulate_grad_batches: 1
   use_early_stopping: true
   early_stopping_patience: 10
-  save_dir: "/home/s8l/remote_storage/aleks/competitions/libribrain/models/megnet_081625v0"
+  save_dir: "<MODEL_ROOT>/models/megnet_081625v0"
   use_swa: false  # Stochastic Weight Averaging
 
 logging:
-  log_dir: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/lightning_logs"
+  log_dir: "<DATA_ROOT>/lightning_logs"
   use_tensorboard: true
   wandb:
     project: "libribrain-phoneme-classification-v2"
@@ -81,5 +81,5 @@ evaluation:
 submission:
   batch_size: 64
   num_workers: 8
-  output_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/megnet_081625v0_submission.csv"
+  output_path: "<DATA_ROOT>/megnet_081625v0_submission.csv"
   holdout_task: "phoneme"

@@ -2,7 +2,7 @@
 # Multi-level linguistic hierarchy with consistency regularization
 
 data:
-  data_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/libribrain/data"
+  data_path: "<DATA_ROOT>/libribrain/data"
   tmin: 0.0
   tmax: 0.5  # 0.5 seconds for 125 time points at 250Hz
   use_subset: false  # Set to false for full training data
@@ -26,7 +26,7 @@ training:
   accumulate_grad_batches: 2  # Effective batch size of 128
   use_early_stopping: true
   early_stopping_patience: 30
-  save_dir: "/home/s8l/remote_storage/aleks/competitions/libribrain/models/hce_090325v3"
+  save_dir: "<MODEL_ROOT>/models/hce_090325v3"
   num_workers: 32
   
   # Stochastic Weight Averaging
@@ -70,7 +70,7 @@ model:
     total_epochs: 150      # Total epochs (same as max_epochs)
 
 logging:
-  log_dir: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/lightning_logs"
+  log_dir: "<DATA_ROOT>/lightning_logs"
   use_tensorboard: true
   wandb:
     project: "libribrain-phoneme-hierarchical"
@@ -93,5 +93,5 @@ submission:
   # Submission generation settings
   batch_size: 64
   num_workers: 32
-  output_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/hce_090325v3_submission.csv"
+  output_path: "<DATA_ROOT>/hce_090325v3_submission.csv"
   holdout_task: "phoneme"  # Task type for holdout dataset

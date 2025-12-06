@@ -37,7 +37,7 @@ from pnpl.datasets import LibriBrainPhoneme, GroupedDataset, LibriBrainCompetiti
 console = Console()
 
 """
-python models/architectures/cape.py --data-path /home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/libribrain/data/     --batch-size 64     --epochs 50     --use-context     --grouped-samples 1     --lr 1e-4     --wandb-name "CAPE_082925v0"     --gpus 1     --seed 42     --holdout-path /home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/libribrain/data/COMPETITION_HOLDOUT/derivatives/serialised/sub-0_ses-2025_task-COMPETITION_HOLDOUT_run-1_proc-bads+headpos+sss+notch+bp+ds_meg.h5      --output-dir /home/s8l/remote_storage/aleks/competitions/libribrain/models/cape_082925v0     --submission-dir /home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/submissions
+python models/architectures/cape.py --data-path <DATA_ROOT>/libribrain/data/     --batch-size 64     --epochs 50     --use-context     --grouped-samples 1     --lr 1e-4     --wandb-name "CAPE_082925v0"     --gpus 1     --seed 42     --holdout-path <DATA_ROOT>/libribrain/data/COMPETITION_HOLDOUT/derivatives/serialised/sub-0_ses-2025_task-COMPETITION_HOLDOUT_run-1_proc-bads+headpos+sss+notch+bp+ds_meg.h5      --output-dir <MODEL_ROOT>/models/cape_082925v0     --submission-dir <DATA_ROOT>/submissions
 """
 
 
@@ -516,7 +516,7 @@ def main():
     # Data arguments
     parser.add_argument('--data-path', type=str, required=True, help='Path to LibriBrain data')
     parser.add_argument('--holdout-path', type=str, 
-                       default='/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/libribrain/data/COMPETITION_HOLDOUT/derivatives/serialised/sub-0_ses-2025_task-COMPETITION_HOLDOUT_run-1_proc-bads+headpos+sss+notch+bp+ds_meg.h5',
+                       default='<DATA_ROOT>/libribrain/data/COMPETITION_HOLDOUT/derivatives/serialised/sub-0_ses-2025_task-COMPETITION_HOLDOUT_run-1_proc-bads+headpos+sss+notch+bp+ds_meg.h5',
                        help='Path to holdout MEG file')
     
     # Training strategy

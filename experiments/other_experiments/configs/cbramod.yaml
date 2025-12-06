@@ -1,7 +1,7 @@
 # Enhanced CBraMod configuration for phoneme classification
 
 data:
-  data_path: "/home/s8l/remote_storage/competitions/libribrain/data/"
+  data_path: "<MODEL_ROOT>/data/"
   tmin: 0.0
   tmax: 0.5
   use_subset: false  # Use full training data
@@ -11,7 +11,7 @@ data:
   
   # Preprocessing options
   use_preprocessed: false  # Set to true to use preprocessed data (much faster)
-  preprocessed_dir: "/home/s8l/remote_storage/aleks/competitions/libribrain/preprocessed_data"
+  preprocessed_dir: "<MODEL_ROOT>/preprocessed_data"
   load_to_memory: false  # Load entire dataset to RAM (faster but uses more memory)
 
 training:
@@ -26,7 +26,7 @@ training:
   accumulate_grad_batches: 1
   use_early_stopping: true
   early_stopping_patience: 10
-  save_dir: "/home/s8l/remote_storage/aleks/competitions/libribrain/models/enhanced_cbramod_phoneme"
+  save_dir: "<MODEL_ROOT>/models/enhanced_cbramod_phoneme"
 
 logging:
   log_dir: "./lightning_logs"
