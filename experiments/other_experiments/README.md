@@ -1,6 +1,6 @@
 # Other Experiments
 
-We tried 58+ alternative architectures alongside DeMEGa (many not listed individually here). These trials informed DeMEGa’s final shape: disentangled attention came after observing Transformers struggle on raw MEG, class-balanced focal and temperature scaling were refined during the LCS/CTC and class-reweighting runs, the IPA multi-task head was inspired by the phonetic feature experiments, multi-scale and patch ideas came from CBraMod/Scales/ViT tests, and sensor priors from graph/dilated models guided how we handle spatial information. Paths and storage details have been anonymized.
+We tried 58+ alternative architectures alongside DeMEGa (many not listed individually here). These trials informed DeMEGa’s final shape: disentangled attention became the default after testing Transformers on raw MEG, class-balanced focal and temperature scaling were refined during LCS/CTC and class-reweighting runs, the IPA multi-task head drew from phonetic feature experiments, multi-scale and patch ideas echoed CBraMod/Scales/ViT tests, and sensor priors from graph/dilated models guided how to handle spatial structure.
 
 ## Specialist and Ensemble Approaches
 - 13 Phonemes Why – specialist ensemble targeting rare phonemes with parallel branches. Code: [13_phonemes_why.py](architectures/13_phonemes_why.py), [_13_phonemes_why.py](architectures/_13_phonemes_why.py). Config: [13_phonemes_why.yaml](configs/13_phonemes_why.yaml).
