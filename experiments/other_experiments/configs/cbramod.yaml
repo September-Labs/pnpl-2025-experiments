@@ -1,0 +1,79 @@
+# Enhanced CBraMod configuration for phoneme classification
+
+data:
+  data_path: "/home/s8l/remote_storage/competitions/libribrain/data/"
+  tmin: 0.0
+  tmax: 0.5
+  use_subset: false  # Use full training data
+  use_signal_averaging: true
+  grouped_samples: 100  # Signal averaging for noise reduction
+  shuffle_seed: 777  # For reproducible shuffling in GroupedDataset
+  
+  # Preprocessing options
+  use_preprocessed: false  # Set to true to use preprocessed data (much faster)
+  preprocessed_dir: "/home/s8l/remote_storage/aleks/competitions/libribrain/preprocessed_data"
+  load_to_memory: false  # Load entire dataset to RAM (faster but uses more memory)
+
+training:
+  max_epochs: 40  # More epochs for transformer convergence
+  batch_size: 32  # Larger batch for transformer stability
+  learning_rate: 0.001  # Higher initial LR with cosine schedule
+  num_workers: 64
+  seed: 42
+  devices: 1
+  accelerator: "auto"
+  gradient_clip_val: 1.0
+  accumulate_grad_batches: 1
+  use_early_stopping: true
+  early_stopping_patience: 10
+  save_dir: "/home/s8l/remote_storage/aleks/competitions/libribrain/models/enhanced_cbramod_phoneme"
+
+logging:
+  log_dir: "./lightning_logs"
+  use_tensorboard: true
+  wandb:
+    project: "libribrain-phoneme-classification"
+    entity: september-labs
+    name: "enhanced-cbramod-phoneme"
+    tags: ["phoneme", "classification", "libribrain", "cbramod", "enhanced"]
+    notes: "Enhanced CBraMod with optimizations for 0.5s phoneme classification"
+
+model:
+  module: "models.architectures.cbramod"
+  class: "PhonemeClassificationCBraMod"
+  
+  params:
+    learning_rate: 0.001
+    
+  cbramod_config:
+    # Architecture optimized for short sequences
+    patch_size: 25  # 5 patches × 25 = 125 time points
+    num_patches: 5  # Matches input length exactly
+    d_model: 128  # Balanced model size
+    dim_feedforward: 512  # 4x d_model
+    n_layer: 6  # Moderate depth
+    nhead: 8  # 8 attention heads
+    dropout: 0.3  # Strong regularization
+    
+    # These are handled internally now:
+    # - Spectral features (FFT branch)
+    # - Channel mixing (spatial attention)
+    # - Positional encoding (learnable)
+    # - Label smoothing (0.1)
+    # - AdamW with weight decay (0.05)
+    # - Cosine LR schedule with warmup
+
+evaluation:
+  partition: "test"
+  batch_size: 32
+  num_workers: 16
+  use_signal_averaging: true
+  grouped_samples: 100
+  plot_results: false
+  save_plots: false
+  
+submission:
+  batch_size: 32
+  num_workers: 16
+  output_path: "./enhanced_cbramod_phoneme_submission.csv"
+  holdout_task: "phoneme"

@@ -1,0 +1,105 @@
+data:
+  data_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/libribrain/data"
+  tmin: 0.0
+  tmax: 0.5  # 0.5 seconds for 125 time points at 250Hz
+  use_subset: false  # Set to false for full training data
+  use_signal_averaging: true
+  grouped_samples: 100  # Group average for better SNR
+  shuffle_seed: 777  # For reproducible shuffling in GroupedDataset
+  
+  # Preprocessing options
+  use_preprocessed: true  # Set to true to use preprocessed data (much faster)
+  preprocessed_dir: "/scratch2/libribrain_processed/preprocessed_data_tmax0_5_grouped100_v7"
+  load_to_memory: true  # Load entire dataset to RAM (faster but uses more memory)
+
+training:
+  max_epochs: 20  # Single stage training
+  batch_size: 256
+  learning_rate: 0.0001  # Slightly higher for improved architecture
+  num_workers: 32
+  seed: 42 
+  devices: 1
+  accelerator: "gpu"
+  strategy: "auto"
+  gradient_clip_val: 1.0
+  accumulate_grad_batches: 1
+  use_early_stopping: true
+  early_stopping_patience: 10  # More aggressive early stopping
+  save_dir: "/home/s8l/remote_storage/aleks/competitions/libribrain/models/mamba"
+  
+  # Checkpoint settings
+  checkpoint:
+    monitor: "val_f1_macro"
+    mode: "max"
+    save_top_k: 3
+    save_last: true
+    verbose: true
+
+logging:
+  log_dir: "./lightning_logs"
+  use_tensorboard: true
+  log_every_n_steps: 50
+  wandb:
+    project: "libribrain-phoneme-classification"
+    entity: "september-labs"  # Set to your wandb entity/team name
+    name: "mamba"  # Run name
+    tags: ["phoneme", "classification", "libribrain"]
+    notes: "SSM"
+
+
+model:
+  # Model selection - specify module path and class name
+  module: "models.architectures.mamba_moe"  # Module containing the improved model
+  class: "MambaMoEMEGClassifier"                      # Class name to instantiate
+  
+  # Model architecture parameters
+  params:
+    # Core dimensions
+    # meg_channels: 306      # MEG sensor channels
+    time_points: 125       # Will be overridden by script but included for clarity
+    # vocab_size: 39         # Number of phoneme classes
+    # hidden_dim: 256         # Hidden dimension size
+    #
+    # # Architecture choices
+    # use_conformer: true    # Use Conformer with DeBERTa attention
+    # num_conformers: 24      # Number of Conformer layers
+    # norm_type: "pre"       # Pre-layer normalization
+    #
+    # # Training parameters
+    # learning_rate: 0.0001  # Base learning rate
+    # classifier_lr_multiplier: 2.0  # Classifier learns faster
+    #
+    # # Loss configuration
+    # loss_type: "focal"     # Use focal loss for class imbalance
+    # focal_gamma: 2.0       # Focal loss gamma parameter
+    # temperature: 2.0       # Temperature for class reweighting
+    #
+    # rotary_base: 10000
+    # rotary_scaling: 1.0
+    #
+    # # Regularization
+    # dropout_rate: 0.1      # Dropout rate
+    # label_smoothing: 0.1   # Label smoothing (also in training section)
+    # weight_decay: 0.01     # L2 regularization
+    #
+    # # Learning rate schedule
+    # warmup_epochs: 5       # Linear warmup epochs
+    # total_epochs: 100      # Total epochs for cosine schedule
+
+evaluation:
+  # Evaluation-specific settings
+  partition: "test"  # "validation" or "test"
+  batch_size: 128
+  num_workers: 16
+  use_signal_averaging: true
+  grouped_samples: 100  # More averaging for cleaner evaluation
+  plot_results: true
+  save_plots: true
+
+submission:
+  # Submission generation settings
+  batch_size: 128
+  num_workers: 32
+  output_path: "./submissions/mamba.csv"
+  holdout_task: "phoneme"  # Task type for holdout dataset
+

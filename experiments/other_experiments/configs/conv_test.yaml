@@ -1,0 +1,93 @@
+# Configuration for Simple Conv-Transformer Model
+# Works with existing train.py script
+
+data:
+  data_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/libribrain/data"
+  tmin: 0.0
+  tmax: 0.5  # 125 time points at 250Hz
+  use_subset: false  # Use full training data
+  use_signal_averaging: true
+  grouped_samples: 100  # Match test conditions
+  shuffle_seed: 777
+  
+  # Preprocessing options (if using preprocessed data)
+  use_preprocessed: true
+  preprocessed_dir: "/scratch2/libribrain_processed/preprocessed_data_tmax0_5_grouped100"
+  load_to_memory: true
+
+training:
+  max_epochs: 50
+  batch_size: 128
+  learning_rate: 0.001  # Note: Also set in model params
+  num_workers: 32
+  seed: 42
+  devices: 1
+  accelerator: "gpu"
+  strategy: "auto"
+  gradient_clip_val: 1.0
+  accumulate_grad_batches: 1
+  use_early_stopping: true
+  early_stopping_patience: 10
+  use_swa: false
+  swa_lrs: 0.00001
+  save_dir: "/home/s8l/remote_storage/aleks/competitions/libribrain/models/conv_trans_test"
+  label_smoothing: 0.1  # Also passed to model
+
+model:
+  # Module path and class name for dynamic loading
+  module: "models.architectures.hd"
+  class: "HyperdimensionalModel"
+  
+  # All parameters for the model
+  params:
+    # Data parameters (time_points added by train.py)
+    #meg_channels: 306
+    num_channels: 306
+    num_classes: 39
+    
+    # Model architecture
+    hidden_dim: 512
+    num_conv_layers: 6
+    kernel_size: 10
+    num_transformer_layers: 8
+    num_heads: 16
+    ff_dim: 2048
+    dropout: 0.4
+    
+    # Training parameters
+    learning_rate: 0.0001
+    weight_decay: 0.1
+    label_smoothing: 0.2
+    
+    # Masking strategies for struggling phonemes
+    use_focal_loss: true
+    focal_gamma: 4.0
+    struggling_weight: 6.0  # Boost weight for struggling phonemes
+    use_mixup: true
+    mixup_alpha: 0.4
+    augment_prob: 0.7  # Augment struggling phonemes 50% of the time
+
+logging:
+  use_tensorboard: true
+  log_dir: "/home/s8l/remote_storage/aleks/competitions/libribrain/models/conv_trans_test/logs"
+  wandb:
+    project: "libribrain-phoneme-classification"
+    entity: "september-labs"  # Replace with your entity
+    name: "conv_trans_test"
+    tags: ["phoneme", "transformer", "conv1d", "focal_loss", "struggling_phonemes"]
+    notes: "Simple Conv-Transformer with focal loss and augmentation for struggling phonemes"
+
+evaluation:
+  partition: "validation"
+  batch_size: 64
+  num_workers: 4
+  use_signal_averaging: true
+  grouped_samples: 100
+  plot_results: true
+  save_plots: true
+
+submission:
+  batch_size: 64
+  num_workers: 4
+  output_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/conv_trans_test.csv"
+  holdout_task: "phoneme"

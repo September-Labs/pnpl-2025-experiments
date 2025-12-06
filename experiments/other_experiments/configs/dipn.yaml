@@ -1,0 +1,97 @@
+# DIPN Configuration - Domain-Invariant Phoneme Network
+# Optimized for robustness to domain shift
+
+data:
+  data_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/libribrain/data"
+  tmin: 0.0
+  tmax: 0.5  # 125 time points at 250Hz
+  use_subset: false
+  use_signal_averaging: true
+  grouped_samples: 100
+  shuffle_seed: 777
+  
+  # Use preprocessed data for speed
+  use_preprocessed: true
+  preprocessed_dir: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/preprocessed_data_tmax0_5_grouped100"
+  load_to_memory: true
+
+training:
+  max_epochs: 40  # Fewer epochs to avoid overfitting
+  batch_size: 64  # Larger batch for stability
+  learning_rate: 0.0001  # Conservative LR
+  num_workers: 32
+  seed: 777
+  devices: 1
+  accelerator: "gpu"
+  strategy: "auto"
+  gradient_clip_val: 0.5  # More aggressive clipping
+  accumulate_grad_batches: 1
+  use_early_stopping: true
+  early_stopping_patience: 8
+  save_dir: "/home/s8l/remote_storage/aleks/competitions/libribrain/models/dipn_081725v0"
+  use_swa: false  # Disable SWA for now
+
+logging:
+  log_dir: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/lightning_logs"
+  use_tensorboard: true
+  wandb:
+    project: "libribrain-phoneme-classification-v2"
+    entity: "september-labs"
+    name: "dipn_081725v0"
+    tags: ["dipn", "domain_invariant", "phoneme", "ensemble", "robust"]
+    notes: "Domain-Invariant Phoneme Network with statistical features and ensemble predictions"
+
+model:
+  # Model selection
+  module: "models.architectures.dipn"
+  class: "DomainInvariantPhonemeNet"
+  
+  # Model parameters
+  params:
+    learning_rate: 0.0001
+    
+  # DIPN specific configuration
+  dipn_config:
+    # Data dimensions
+    meg_channels: 306
+    time_points: 125
+    num_classes: 39
+    
+    # Architecture - deliberately small
+    base_dim: 48  # Even smaller for more regularization
+    num_paths: 3
+    conformer_heads: 4
+    
+    # Training parameters
+    weight_decay: 0.05  # Strong regularization
+    label_smoothing: 0.15  # More smoothing
+    
+    # Regularization
+    dropout_rate: 0.3
+    feature_dropout: 0.5  # Heavy dropout on statistical features
+    mixup_alpha: 0.1  # Light mixup
+    
+    # Ensemble and uncertainty
+    use_uncertainty: true
+    uncertainty_weight: 0.1
+    temperature: 1.5  # Temperature scaling for calibration
+    
+    # Scheduler
+    use_scheduler: "cosine_warmup"
+    warmup_epochs: 3
+    max_epochs: 40
+
+evaluation:
+  partition: "test"
+  batch_size: 128
+  num_workers: 8
+  use_signal_averaging: true
+  grouped_samples: 100
+  plot_results: true
+  save_plots: true
+
+submission:
+  batch_size: 128
+  num_workers: 8
+  output_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/dipn_081725v0_submission.csv"
+  holdout_task: "phoneme"

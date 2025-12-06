@@ -1,0 +1,108 @@
+
+data:
+  data_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/libribrain/data"
+  tmin: 0.0
+  tmax: 0.5  # 0.5 seconds for 125 time points at 250Hz
+  use_subset: false  # Set to false for full training data
+  use_signal_averaging: true
+  grouped_samples: 100
+  shuffle_seed: 777
+  
+  # Preprocessing options
+  use_preprocessed: true
+  preprocessed_dir: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/preprocessed_data_tmax0_5_grouped100"
+  load_to_memory: true
+
+training:
+  max_epochs: 20
+  batch_size: 32
+  learning_rate: 0.00005
+  num_workers: 32
+  seed: 777
+  devices: 1
+  accelerator: "gpu"
+  strategy: "auto"
+  gradient_clip_val: 1.0
+  accumulate_grad_batches: 1
+  use_early_stopping: false
+  early_stopping_patience: 10
+  save_dir: "/home/s8l/remote_storage/aleks/competitions/libribrain/models/uniphynet_081725v1"
+  use_swa: false  # Stochastic Weight Averaging
+
+logging:
+  log_dir: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/lightning_logs"
+  use_tensorboard: true
+  wandb:
+    project: "libribrain-phoneme-classification-v2"
+    entity: "september-labs"
+    name: "uniphynet_081725v1"
+    tags: ["uniphynet", "phoneme", "classification", "meg", "resnet", "conformer"]
+    notes: "UniPhyNetMEG with ResNet blocks and multi-scale features for MEG phoneme classification"
+
+model:
+  # Model selection
+  module: "models.architectures.uniphy"
+  class: "UniPhyNetMEG"
+  
+  # Common parameters
+  params:
+    learning_rate: 0.00005
+    
+  # UniPhyNetMEG specific configuration
+  uniphy_config:
+    num_classes: 39
+    channels: 306
+    kernels: [1]  # Multi-scale kernel sizes
+    num_feature_maps: 16  # Feature map dimension
+    res_blocks: 0  # Number of ResNet blocks
+    fixed_kernel_size: 1
+    dropout_rate: 0.5
+    weight_decay: 0.1
+    label_smoothing: 0.2
+    
+    # RNN settings
+    use_rnn: false  # Enable RNN for temporal modeling
+    rnn_hidden_size: 256
+    rnn_layers: 2
+    
+    # Data augmentation
+    mixup_alpha: 0.0  # Set to 0 to disable mixup
+    cutmix_alpha: 0.0  # Set to 0 to disable cutmix
+    
+    # Optimizer settings
+    optimizer: "adamw"  # Options: adamw, adam, sgd
+    
+    # Learning rate scheduler
+    use_scheduler: "none"  # Options: onecycle, cosine, cosine_warmup, reduce_on_plateau, none
+    scheduler_params:
+      warmup_epochs: 1
+      max_epochs: 20
+      # pct_start: 0.1
+      # anneal_strategy: "cos"
+      # div_factor: 10
+      # final_div_factor: 10000
+
+    # Enhanced logging settings
+    log_interval: 50  # Log detailed metrics every N batches
+    
+    # Analysis flags (set these to control what gets logged)
+    track_gradients: true
+    track_attention: true
+    track_features: true
+    track_confusion: true
+    track_difficulty: true
+
+evaluation:
+  partition: "test"
+  batch_size: 64
+  num_workers: 8
+  use_signal_averaging: true
+  grouped_samples: 100
+  plot_results: true
+  save_plots: true
+  
+submission:
+  batch_size: 64
+  num_workers: 8
+  output_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/uniphynet_081725v1_submission.csv"
+  holdout_task: "phoneme"

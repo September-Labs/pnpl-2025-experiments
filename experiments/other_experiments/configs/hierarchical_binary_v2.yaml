@@ -1,0 +1,97 @@
+# MEG Phoneme Classification with Hierarchical Consistency Enhancement (HCE)
+# Multi-level linguistic hierarchy with consistency regularization
+
+data:
+  data_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/libribrain/data"
+  tmin: 0.0
+  tmax: 0.5  # 0.5 seconds for 125 time points at 250Hz
+  use_subset: false  # Set to false for full training data
+  use_signal_averaging: true
+  grouped_samples: 100  # Group average for better SNR
+  shuffle_seed: 777  # For reproducible shuffling in GroupedDataset
+  
+  # Preprocessing options
+  use_preprocessed: true  # Set to true to use preprocessed data (much faster)
+  preprocessed_dir: "/scratch2/libribrain_processed/preprocessed_data_tmax0_5_grouped100"
+  load_to_memory: true  # Load entire dataset to RAM (faster but uses more memory)
+
+training:
+  max_epochs: 150  # More epochs for hierarchical training
+  batch_size: 64  # Smaller batch size for complex model
+  seed: 777
+  devices: 1
+  accelerator: "gpu"
+  strategy: "auto"
+  gradient_clip_val: 1.0
+  accumulate_grad_batches: 2  # Effective batch size of 128
+  use_early_stopping: true
+  early_stopping_patience: 30
+  save_dir: "/home/s8l/remote_storage/aleks/competitions/libribrain/models/hce_090325v3"
+  num_workers: 32
+  
+  # Stochastic Weight Averaging
+  use_swa: false  # Disable SWA for HCE model
+  swa_lrs: 1e-3
+
+model:
+  # Model selection - specify module path and class name
+  module: "models.architectures.hierarchical_binary_v2"  # Module containing the HCE model class
+  class: "MEGPhonemeClassifierHCE"     # Class name to instantiate
+  
+  # Common parameters passed to the model
+  params:
+    meg_channels: 306      # MEG sensor channels
+    vocab_size: 39         # Number of phoneme classes
+    time_points: 125       # Will be overridden by train.py based on tmin/tmax
+    
+    # Architecture parameters
+    initial_channels: 64
+    conv_channels: [128, 256, 512]  # Multi-scale conv block channels
+    d_model: 512           # Transformer dimension
+    n_heads: 16             # Number of attention heads
+    n_transformer_layers: 8  # Number of transformer blocks
+    d_ff: 1024            # Feed-forward dimension
+    dropout: 0.3          # Dropout rate
+    
+    # HCE-specific parameters
+    hce_phoneme_weight: 1.0     # Weight for main phoneme loss
+    hce_broad_weight: 0.3       # Weight for broad category (vowel/consonant)
+    hce_manner_weight: 0.2      # Weight for manner of articulation
+    hce_place_weight: 0.2       # Weight for place of articulation
+    hce_height_weight: 0.15     # Weight for vowel height
+    hce_backness_weight: 0.15   # Weight for vowel backness
+    consistency_weight: 0.1     # Weight for consistency between hierarchical predictions
+    
+    # Training parameters
+    learning_rate: 0.0001    # Higher LR for complex model
+    weight_decay: 0.01     # Weight decay for regularization
+    label_smoothing: 0.1   # Label smoothing
+    warmup_epochs: 5      # Warmup epochs for learning rate
+    total_epochs: 150      # Total epochs (same as max_epochs)
+
+logging:
+  log_dir: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/lightning_logs"
+  use_tensorboard: true
+  wandb:
+    project: "libribrain-phoneme-hierarchical"
+    entity: "september-labs"  # Set to your wandb entity/team name
+    name: "hce_090325v3"  # Run name
+    tags: ["phoneme", "classification", "libribrain", "hce", "hierarchical", "multi-task"]
+    notes: "MEG Phoneme Classification with Hierarchical Consistency Enhancement - linguistic hierarchy multi-task learning"
+
+evaluation:
+  # Evaluation-specific settings
+  partition: "validation"  # "validation" or "test"
+  batch_size: 32
+  num_workers: 16
+  use_signal_averaging: true
+  grouped_samples: 100
+  plot_results: true
+  save_plots: true
+
+submission:
+  # Submission generation settings
+  batch_size: 64
+  num_workers: 32
+  output_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/hce_090325v3_submission.csv"
+  holdout_task: "phoneme"  # Task type for holdout dataset

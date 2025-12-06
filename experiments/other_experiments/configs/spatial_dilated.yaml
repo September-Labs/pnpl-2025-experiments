@@ -1,0 +1,86 @@
+# spatial_dilated.yaml
+data:
+  data_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/libribrain/data"
+  tmin: 0.0
+  tmax: 0.5
+  use_subset: false
+  use_signal_averaging: true
+  grouped_samples: 100
+  shuffle_seed: 777
+  
+  use_preprocessed: true
+  preprocessed_dir: "/scratch2/libribrain_processed/preprocessed_data_tmax0_5_grouped50"
+  load_to_memory: true
+
+training:
+  max_epochs: 50
+  batch_size: 128
+  learning_rate: 0.0001
+  weight_decay: 0.01
+  num_workers: 32
+  seed: 42
+  devices: 1
+  accelerator: "gpu"
+  strategy: "auto"
+  gradient_clip_val: 1.0
+  accumulate_grad_batches: 1
+  use_early_stopping: true
+  early_stopping_patience: 10
+  use_swa: false
+  swa_lrs: 0.00005
+  label_smoothing: 0.1
+  save_dir: "/home/s8l/remote_storage/aleks/competitions/libribrain/models/spatial_dilated_082325v4"
+
+logging:
+  log_dir: "/home/s8l/remote_storage/aleks/competitions/libribrain/models/spatial_dilated_082325v4/logs"
+  use_tensorboard: true
+  wandb:
+    project: "libribrain-phoneme-classification"
+    entity: "september-labs"
+    name: "spatial_dilated_082325v4"
+    tags: ["phoneme", "spatial-attention", "dilated-conv", "defossez"]
+    notes: "Spatial attention with Fourier basis and residual dilated convolutions adapted from Défossez et al. 2023"
+
+model:
+  module: "models.architectures.spatial_dilated"
+  class: "SpatialDilatedNetwork"
+  
+  params:
+    learning_rate: 0.0001
+    weight_decay: 0.1
+    n_channels: 306
+    n_classes: 39
+    
+  spatial_dilated_config:
+    # Spatial attention parameters
+    spatial_output_channels: 306 # can try 306
+    fourier_harmonics: 128
+    spatial_dropout_radius: 0.1
+    sensor_coordinates_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/libribrain/data/sensor_xyz.json"
+    
+    # Convolutional architecture
+    hidden_channels: 640
+    n_blocks: 8
+    kernel_size: 5
+    
+    # Regularization
+    dropout_rate: 0.05
+    use_batch_norm: false
+    
+    # Temporal shift (ms) - for aligning brain response with stimulus
+    temporal_shift_ms: 0
+
+evaluation:
+  partition: "test"
+  batch_size: 64
+  num_workers: 32
+  use_signal_averaging: true
+  grouped_samples: 100
+  plot_results: true
+  save_plots: true
+  
+submission:
+  batch_size: 64
+  num_workers: 32
+  output_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/spatial_dilated_082325v4_submission.csv"
+  holdout_task: "phoneme"

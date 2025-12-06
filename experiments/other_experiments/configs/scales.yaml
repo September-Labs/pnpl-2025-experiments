@@ -1,0 +1,85 @@
+# Multi-Scale MSDD Configuration for MEG Phoneme Classification
+# Uses multiple pre-grouped datasets (5, 10, 25, 50, 100 samples)
+
+data:
+  data_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/libribrain/data"
+  tmin: 0.0
+  tmax: 0.5  # 0.5 seconds for 125 time points at 250Hz
+  
+  # Multi-scale preprocessing settings
+  use_preprocessed: true  # Must be true for multi-scale
+  preprocessed_dir: "/scratch2/libribrain_processed/preprocessed_data_tmax0_5_grouped100"
+  
+  # Multi-scale specific settings
+  multiscale_groups: [10, 25, 50, 100]  # Scales to use for training
+  load_to_memory: true  # Load all scales into RAM
+  align_samples: true  # Ensure samples are aligned across scales
+
+  use_balanced_sampling: true 
+
+training:
+  max_epochs: 50
+  batch_size: 16  # Reduced due to multiple scales in memory
+  learning_rate: 0.00005  # Lower LR for multi-scale learning
+  num_workers: 32  # Reduced to avoid memory issues
+  seed: 777
+  devices: 1
+  accelerator: "gpu"
+  strategy: "auto"
+  gradient_clip_val: 0.5
+  accumulate_grad_batches: 1
+  use_early_stopping: true
+  early_stopping_patience: 5
+  use_swa: true
+  swa_lrs: 0.00001
+  save_dir: "/home/s8l/remote_storage/aleks/competitions/libribrain/models/scales_082125v4"
+  label_smoothing: 0.2  # Add some smoothing for multi-scale robustness
+
+logging:
+  log_dir: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/lightning_logs"
+  use_tensorboard: true
+  wandb:
+    project: "libribrain-phoneme-classification"
+    entity: "september-labs"
+    name: "scales_082125v4"
+    tags: ["phoneme", "classification", "libribrain", "msdd", "multiscale", "conformer"]
+    notes: "Multi-scale MSDD model processing 5/10/25/50/100 grouped samples with dynamic scale weighting"
+
+model:
+  # Model selection - specify module path and class name
+  module: "models.architectures.scales"  # Save the Python file with this name
+  class: "MultiScaleMEGPhonemeClassifier"
+  
+  # Common parameters
+  params:
+    learning_rate: 0.00001
+    label_smoothing: 0.1
+    
+  # MSDD-specific configuration
+  scales_config:
+    meg_channels: 306
+    vocab_size: 39
+    hidden_dim: 256  # Reduced from 512 due to memory with multiple scales
+    num_conformers: 2
+    scales: [10, 25, 50, 100]
+    weighting_type: "cnn"  # Options: "cnn", "attention", "mlp"
+    share_encoders: true  # Share encoder across scales or use separate
+
+    use_focal_loss: true  # Enable focal loss
+    focal_gamma: 2.0      # Focus on hard examples
+    struggling_weight: 5.0  # Weight multiplier for struggling phonemes
+    
+evaluation:
+  partition: "test"
+  batch_size: 64
+  num_workers: 16
+  use_signal_averaging: true
+  grouped_samples: 100  # Always evaluate on 100-grouped
+  plot_results: true
+  save_plots: true
+
+submission:
+  batch_size: 64
+  num_workers: 16
+  output_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/scales_082125v4_submission.csv"
+  holdout_task: "phoneme"

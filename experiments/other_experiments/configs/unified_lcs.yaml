@@ -1,0 +1,100 @@
+# unified_three_stage.yaml
+data:
+  data_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/libribrain/data"
+  tmin: 0.0
+  tmax: 0.5
+  use_subset: false
+  use_signal_averaging: true
+  grouped_samples: 100
+  shuffle_seed: 777
+  
+  use_preprocessed: true
+  preprocessed_dir: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/preprocessed_data_tmax0_5_grouped100"
+  load_to_memory: true
+
+training:
+  # Total epochs = stage1 + stage2 + stage3 = 20 + 15 + 10 = 45
+  max_epochs: 15 
+  batch_size: 64
+  learning_rate: 0.0001  # Will be overridden by stage-specific LR
+  num_workers: 16
+  seed: 777
+  devices: 1
+  accelerator: "gpu"
+  strategy: "auto"
+  gradient_clip_val: 1.0
+  accumulate_grad_batches: 1
+  use_early_stopping: false  # Disable for stage training
+  save_dir: "/home/s8l/remote_storage/aleks/competitions/libribrain/models/unified_lcs_082025v1_s2"
+  use_swa: false  # Disable SWA for cleaner stage training
+
+logging:
+  log_dir: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/lightning_logs"
+  use_tensorboard: true
+  wandb:
+    project: "libribrain-phoneme-specialist"
+    entity: "september-labs"
+    name: "unified_lcs_082025v1_s2"  # Update for each stage
+    tags: ["phoneme", "unified", "stage1", "main-model"]  # Update tags
+    notes: "Stage 1: Training main model only for 20 epochs"
+
+model:
+  module: "models.architectures.unified_lcs"
+  class: "UnifiedMEGPhonemeClassifier"
+  
+  params:
+    learning_rate: 0.0001  # Overridden by stage-specific
+    meg_channels: 306
+    vocab_size: 39
+    hidden_dim: 256
+    num_conformers: 4
+    
+    # Zipf parameters
+    use_zipf: true
+    zipf_alpha: 0.99
+    zipf_boost_factor: 0.3
+    
+    # Specialist parameters
+    specialist_hidden_dim: 512
+    routing_temperature: 1.0
+    
+    # STAGE CONTROL - CHANGE THIS FOR EACH STAGE
+    training_stage: "stage3"  # Options: stage1, stage2, stage3
+    
+    # Stage configuration
+    stage1_epochs: 20
+    stage2_epochs: 15
+    stage3_epochs: 10
+    
+    # Stage-specific learning rates
+    stage1_lr: 0.0001
+    stage2_lr: 0.00005
+    stage3_lr: 0.00001
+    
+    # Loss weights for stage 3
+    specialist_weight: 0.3
+    main_model_weight: 0.7
+    
+    sensor_importance_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/meta/sensor_phoneme_analysis_results/sensor_importance_matrix.csv"
+    region_importance_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/meta/sensor_phoneme_analysis_results/region_importance_matrix.csv"
+    phoneme_summary_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/meta/sensor_phoneme_analysis_results/phoneme_summary.csv"
+    phoneme_counts_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/phoneme_weights/phoneme_weights.json"
+
+    # Checkpoint paths (update these for stage 2 and 3)
+    pretrained_main_path: /srv/s8l_storage/aleks/competitions/libribrain/models/unified_lcs_082025v1/checkpoints/phoneme-model-epoch=09-val_f1_macro=0.62.ckpt  # Set after stage 1
+    pretrained_specialist_path: /srv/s8l_storage/aleks/competitions/libribrain/models/phoneme_specialist_test_082025v1/checkpoints/best_expert.ckpt  # Set after stage 2
+
+evaluation:
+  partition: "validation"
+  batch_size: 64
+  num_workers: 32
+  use_signal_averaging: true
+  grouped_samples: 100
+  plot_results: true
+  save_plots: true
+
+submission:
+  batch_size: 64
+  num_workers: 32
+  output_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/unified_lcs_082025v1_s2_submission.csv"
+  holdout_task: "phoneme"

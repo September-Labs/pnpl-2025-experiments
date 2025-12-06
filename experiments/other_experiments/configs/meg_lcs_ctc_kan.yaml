@@ -1,0 +1,193 @@
+data:
+  data_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/libribrain/data"
+  tmin: 0.0
+  tmax: 0.5  # 0.5 seconds for 125 time points at 250Hz
+  use_subset: false
+  use_signal_averaging: true
+  grouped_samples: 100  
+  shuffle_seed: 42
+  
+  # Preprocessing options
+  use_preprocessed: true
+  preprocessed_dir: "/scratch2/libribrain_processed/preprocessed_data_tmax0_5_grouped100"  # Need to regenerate with grouped_samples=25
+  load_to_memory: true
+  
+  # Data augmentation (new)
+  augmentation:
+    enabled: false
+    temporal_shift_range: 0.05  # ±5% random shift
+    channel_dropout_prob: 0.5   # Drop 10% channels randomly
+    gaussian_noise_std: 0.01    # Small additive noise
+    mixup_alpha: 0.2            # Mixup between samples
+    cutmix_prob: 0.0            # CutMix probability (0 to disable)
+
+training:
+  max_epochs: 13  # Increase for better convergence
+  batch_size: 64    # Balanced batch size
+  learning_rate: 0.001  # Back to original
+  weight_decay: 0.2     # NEW: Configurable weight decay (was hardcoded 0.1)
+  num_workers: 64
+  seed: 42
+  devices: 1
+  accelerator: "gpu"
+  strategy: "auto"
+  gradient_clip_val: 1.0
+  accumulate_grad_batches: 1  # Effective batch size of 64
+  use_early_stopping: false
+  early_stopping_patience: 10
+  early_stopping_min_delta: 0.001
+  save_dir: "/home/s8l/remote_storage/aleks/competitions/libribrain/models/meg_lcs_ctc_kan_v1"
+  
+  # Learning rate scheduler options (new)
+  scheduler:
+    type: "exponential"  # Options: "cosine_annealing", "reduce_on_plateau", "exponential"
+    t_max: 100  # For cosine annealing
+    eta_min: 1e-6
+    patience: 5  # For reduce_on_plateau
+    factor: 0.5  # For reduce_on_plateau
+    gamma: 0.95  # For exponential
+  
+  # Advanced training options (new)
+  stochastic_depth_rate: 0.2  # Drop layers randomly
+  gradient_accumulation_steps: 1
+  mixed_precision: false  # Set to true for faster training with fp16
+  
+  # Regularization (new)
+  dropout_rate: 0.0  # Global dropout rate
+  dropconnect_rate: 0.0  # For attention layers
+  
+  # Optimizer options (new)
+  optimizer:
+    type: "adam"  # Options: "adamw", "adam", "sgd", "lamb"
+    betas: [0.9, 0.999]
+    eps: 1e-8
+    amsgrad: true
+
+logging:
+  log_dir: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/lightning_logs"
+  use_tensorboard: true
+  log_every_n_steps: 50
+  wandb:
+    project: "libribrain-phoneme-classification"
+    entity: september-labs
+    name: "meg_lcs_ctc_kan_v1"
+    tags: ["phoneme", "classification", "libribrain", "lcs-ctc", "conformer"]
+    notes: "MEG LCS-CTC v3 with comprehensive configurability and balanced hyperparameters"
+
+model:
+  # Model selection
+  module: "models.architectures.meg_lcs_ctc_kan"
+  class: "EnhancedMEGLCSCTCKAN"  # Updated class name
+  
+  # Common parameters
+  params:
+    learning_rate: 0.0001
+    weight_decay: 0.2 # Now configurable
+    dropout_rate: 0.2   # Global dropout
+    
+  meg_lcs_ctc_v3_config:
+    # Architecture parameters
+    meg_channels: 306
+    vocab_size: 39
+    # hidden_dim: 64  # Middle ground between 128 and 256
+    num_conformers: 8  # Back to 2 for better feature extraction
+    
+    # Conformer configuration (new)
+    conformer_config:
+      num_heads: 8
+      ff_expansion_factor: 4  # FFN dimension = hidden_dim * factor
+      conv_kernel_size: 3  # Increased from 3
+      dropout: 0.0  # Conformer-specific dropout
+      use_macaron_style: false  # Whether to use Macaron-style FFN
+    
+    # Temporal modeling (new)
+    temporal_config:
+      multi_scale_kernels: [3, 7, 15]  # Multiple kernel sizes
+      use_dilated_conv: false  # Use dilated convolutions
+      dilation_rates: [1, 2, 4]
+    
+    # CTC configuration
+    use_alignment: true
+    ctc_weight: 0.3  # Weight for CTC loss (main loss gets 1-ctc_weight)
+    ctc_frequency: 5  # Apply CTC every N batches
+    
+    # Zipf configuration
+    zipf_weights: true
+    zipf_alpha: 0.99
+    adaptive_zipf_boost: true
+    min_zipf_boost: 0.25
+    max_zipf_boost: 0.75
+    zipf_boost_factor: 0.3  # Fallback if adaptive disabled
+    
+    # Focal Loss configuration
+    use_focal_loss: false
+    focal_gamma: 2.0  # Back to standard value
+    focal_alpha: null  # Auto-computed
+    focal_alpha_smoothing: 0.1  # Smooth the class weights
+    
+    # Dynamic Channel Selection
+    use_dynamic_channels: true
+    channel_selection_ratio: 0.15
+    channel_selection_strategy: "learned"  # Options: "variance", "learned", "hybrid"
+    coordinate_file: /home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/libribrain/data/sensor_xyz.json
+    
+    # Spatial configuration (new)
+    spatial_config:
+      use_graph_conv: false  # Enable when ready
+      num_spatial_clusters: 4  # Brain regions
+      use_hemisphere_split: false  # Process hemispheres separately
+      spatial_attention_heads: 4
+    
+    # Label smoothing
+    label_smoothing: 0.0
+    
+    # Classification head configuration (new)
+    classifier_config:
+      # hidden_dims: [32, 16]  # Multiple hidden layers
+      dropout_rates: [0.3, 0.2]  # Per-layer dropout
+      activation: "gelu"  # Options: "relu", "gelu", "silu"
+      use_batch_norm: false
+    
+    # Hierarchical classification (new - for future)
+    hierarchical_classification:
+      enabled: false  # Set to true when implemented
+      hierarchy_levels: ["manner", "place", "phoneme"]
+      level_weights: [0.2, 0.3, 0.5]
+    
+    # Ensemble configuration (new)
+    ensemble:
+      enabled: false  # Set to true for ensemble training
+      num_models: 3
+      diversity_loss_weight: 0.1
+
+evaluation:
+  partition: "test"
+  batch_size: 64
+  num_workers: 16
+  use_signal_averaging: true
+  grouped_samples: 25  # Match training
+  plot_results: true
+  save_plots: true
+  compute_confusion_matrix: true
+  
+  # Evaluation metrics (new)
+  metrics:
+    - "f1_macro"
+    - "f1_weighted"
+    - "accuracy"
+    - "precision_macro"
+    - "recall_macro"
+    - "cohen_kappa"
+  
+submission:
+  batch_size: 64
+  num_workers: 16
+  output_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/meg_lcs_ctc_kan_submission.csv"
+  holdout_task: "phoneme"
+  
+  # Test-time augmentation (new)
+  tta:
+    enabled: false  # Set to true for TTA
+    num_augmentations: 5
+    aggregate_method: "mean"  # Options: "mean", "max", "voting"
+

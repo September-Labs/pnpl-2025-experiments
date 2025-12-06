@@ -1,0 +1,85 @@
+data:
+  data_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/libribrain/data"
+  tmin: 0.0
+  tmax: 0.5  # 0.5 seconds for 125 time points at 250Hz
+  use_subset: true  # Set to false for full training data
+  use_signal_averaging: true
+  grouped_samples: 100
+  shuffle_seed: 42
+  
+  # Preprocessing options
+  use_preprocessed: true
+  preprocessed_dir: "/scratch2/libribrain_processed/preprocessed_data_tmax0_5_grouped100"
+  load_to_memory: true
+
+training:
+  max_epochs: 25
+  batch_size: 32
+  learning_rate: 0.0001
+  num_workers: 8
+  seed: 42
+  devices: 1
+  accelerator: "gpu"
+  strategy: "auto"
+  gradient_clip_val: 1.0
+  accumulate_grad_batches: 1
+  use_early_stopping: true
+  early_stopping_patience: 10
+  save_dir: "/home/s8l/remote_storage/aleks/competitions/libribrain/models/megnet_081625v0"
+  use_swa: false  # Stochastic Weight Averaging
+
+logging:
+  log_dir: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/lightning_logs"
+  use_tensorboard: true
+  wandb:
+    project: "libribrain-phoneme-classification-v2"
+    entity: "september-labs"
+    name: "megnet_081625v0"
+    tags: ["megnet", "phoneme", "classification", "meg"]
+    notes: "MEGNet model for MEG phoneme classification"
+
+model:
+  # Model selection
+  module: "models.architectures.megnet_sd"
+  class: "SpectralMEGNet"
+  
+  # Common parameters
+  params:
+    learning_rate: 0.0001
+    
+  # MEGNet specific configuration
+  megnet_config:
+    num_classes: 39
+    channels: 306
+    dropout_rate: 0.1
+    kern_length: 25  # Temporal kernel length
+    F1: 16           # Number of temporal filters
+    D: 2             # Depth multiplier
+    F2: 32           # Number of pointwise filters
+    norm_rate: 0.25
+    weight_decay: 0.00001
+    label_smoothing: 0.1
+    
+    # Optimizer settings
+    optimizer: "adamw"  # Options: adamw, adam, sgd
+    
+    # Learning rate scheduler
+    use_scheduler: "onecycle"  # Options: onecycle, cosine, cosine_warmup, reduce_on_plateau, none
+    scheduler_params:
+      pct_start: 0.1
+      anneal_strategy: "cos"
+
+evaluation:
+  partition: "test"
+  batch_size: 64
+  num_workers: 8
+  use_signal_averaging: true
+  grouped_samples: 100
+  plot_results: true
+  save_plots: true
+  
+submission:
+  batch_size: 64
+  num_workers: 8
+  output_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/megnet_081625v0_submission.csv"
+  holdout_task: "phoneme"

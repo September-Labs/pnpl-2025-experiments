@@ -1,0 +1,92 @@
+# hierarchical_dynamic.yaml
+data:
+  data_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/libribrain/data"
+  tmin: 0.0
+  tmax: 0.5  # 0.5 seconds for 125 time points at 250Hz
+  use_subset: false
+  use_signal_averaging: true
+  grouped_samples: 100
+  shuffle_seed: 777
+  
+  # Preprocessing options
+  use_preprocessed: true
+  preprocessed_dir: "/scratch2/libribrain_processed/preprocessed_data_tmax0_5_grouped100"
+  load_to_memory: true
+
+training:
+  max_epochs: 50
+  batch_size: 32
+  learning_rate: 0.0003
+  weight_decay: 0.0001
+  num_workers: 16
+  seed: 777
+  devices: 1
+  accelerator: "gpu"
+  strategy: "auto"
+  gradient_clip_val: 1.0
+  accumulate_grad_batches: 2
+  use_early_stopping: true
+  early_stopping_patience: 15
+  use_swa: true
+  swa_lrs: 0.0001
+  label_smoothing: 0.1
+  save_dir: "/home/s8l/remote_storage/aleks/competitions/libribrain/models/hd_network_082325v0"
+
+logging:
+  log_dir: "/home/s8l/remote_storage/aleks/competitions/libribrain/models/hd_network_082325v0/logs"
+  use_tensorboard: true
+  wandb:
+    project: "libribrain-phoneme-classification"
+    entity: september-labs
+    name: "hd_network_082325v0"
+    tags: ["phoneme", "classification", "libribrain", "hierarchical", "dynamic", "multi-scale"]
+    notes: "Hierarchical Dynamic Network inspired by neural dynamics paper - multi-scale temporal processing with dynamic codes"
+
+model:
+  module: "models.architectures.hd_network"
+  class: "HierarchicalDynamicNetwork"
+  
+  params:
+    learning_rate: 0.0003
+    weight_decay: 0.0001
+    
+  hierarchical_dynamic_config:
+    n_channels: 306
+    n_classes: 39
+    
+    # Hierarchical temporal scales (inspired by paper's hierarchy)
+    temporal_scales: [1, 2, 4, 8]  # Different temporal resolutions
+    scale_dims: [128, 256, 384, 512]  # Dimensions for each scale
+    
+    # Dynamic code parameters
+    dynamic_kernel_sizes: [3, 5, 7, 11]  # Different receptive fields
+    use_dynamic_conv: true
+    dynamic_reduction: 4
+    
+    # Multi-level processing
+    hidden_dim: 512
+    num_dynamic_layers: 3
+    
+    # Temporal attention for overlapping representations
+    use_temporal_attention: true
+    attention_heads: 8
+    attention_dropout: 0.1
+    
+    # Regularization
+    dropout: 0.3
+    use_layer_norm: true
+    
+evaluation:
+  partition: "test"
+  batch_size: 64
+  num_workers: 32
+  use_signal_averaging: true
+  grouped_samples: 100
+  plot_results: true
+  save_plots: true
+  
+submission:
+  batch_size: 64
+  num_workers: 32
+  output_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/hd_network_082325v0_submission.csv"
+  holdout_task: "phoneme"

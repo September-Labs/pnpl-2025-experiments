@@ -1,0 +1,178 @@
+# SEANet Dual-Loss MEG Phoneme Classification Configuration
+# Features encoder-decoder architecture with classification and reconstruction losses
+data:
+  data_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/libribrain/data"
+  tmin: 0.0
+  tmax: 0.5 # 0.5 seconds for 125 time points at 250Hz
+  use_subset: false # Set to false for full training data
+  use_signal_averaging: true
+  grouped_samples: 100 # Group average for better SNR
+  shuffle_seed: 777 # For reproducible shuffling in GroupedDataset
+  # Preprocessing options
+  use_preprocessed: true # Set to true to use preprocessed data (much faster)
+  preprocessed_dir: "/scratch2/libribrain_processed/preprocessed_data_tmax0_5_grouped100"
+  load_to_memory: true # Load entire dataset to RAM (faster but uses more memory)
+
+
+training:
+  max_epochs: 30 # Adjusted for dual-loss training
+  batch_size: 128 # Reduced due to larger model memory requirements
+  learning_rate: 0.0005 # Higher LR for SEANet architecture
+  num_workers: 32
+  seed: 777
+  devices: 1
+  accelerator: "gpu"
+  strategy: "auto"
+  use_weighted_sampling: false
+  gradient_clip_val: 1.0
+  accumulate_grad_batches: 2 # Effective batch size of 256
+  use_early_stopping: true
+  early_stopping_patience: 15 # More patience for dual-loss convergence
+  save_dir: "/home/s8l/remote_storage/aleks/competitions/libribrain/models/seanet_dual_090725v1"
+  load_from_checkpoint: true
+  checkpoint: /srv/s8l_storage/aleks/competitions/libribrain/models/seanet_dual_090725v1/checkpoints/phoneme-model-epoch=00-val_f1_macro=0.04.ckpt
+
+# Checkpoint settings
+checkpoint:
+  monitor: "val_f1_macro"
+  mode: "max"
+  save_top_k: 3
+  save_last: true
+  verbose: true
+
+logging:
+  log_dir: "./lightning_logs"
+  use_tensorboard: true
+  log_every_n_steps: 50
+
+wandb:
+  project: "libribrain-phoneme-classification"
+  entity: "september-labs" # Set to your wandb entity/team name
+  name: "seanet_dual_loss_090725v1" # Run name
+  tags: ["phoneme", "classification", "libribrain", "seanet", "dual-loss", "encoder-decoder", "reconstruction"]
+  notes: "SEANet encoder-decoder with dual objectives: phoneme classification and signal reconstruction"
+
+holdout:
+  use_holdout: true                    # Enable holdout dataset
+  pseudo_labels_csv: /home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/submissions/ensemble_weighted_probs.csv #"best.csv"        # Path to CSV with predictions
+  task: "phoneme"         
+  confidence_threshold: 0.19  # Optional: minimum confidence to include (0.0 = include all)
+
+model:
+  # Model selection - specify module path and class name
+  module: "models.architectures.seanet" # Your seanet.py file
+  class: "SEANetDualLossModel" # Class name to instantiate
+  
+  # Model architecture parameters
+  params:
+    # Input dimensions
+    input_channels: 306 # MEG sensor channels
+    num_classes: 39 # Number of phoneme classes
+    
+    # SEANet architecture
+    encoder_conv_channels: [128, 256, 512, 1024] # Encoder channel progression
+    decoder_conv_channels: null # Will default to same as encoder
+    dimension: 128 # Bottleneck/latent dimension
+    ratios: [4, 3, 2] # Downsampling ratios (total 40x compression for 125->3 time steps)
+    
+    # ResNet blocks
+    n_residual_layers: 2 # Number of residual blocks per stage
+    residual_kernel_size: 3 # Kernel size for residual connections
+    dilation_base: 2 # Dilation progression in residual blocks
+    compress: 2 # Compression factor in residual bottlenecks
+    true_skip: true # Use identity skip connections
+    
+    # LSTM layers
+    lstm_layers: 2 # Number of LSTM layers in encoder/decoder
+    
+    # Activation and normalization
+    activation: "ELU" # Activation function
+    activation_params:
+      alpha: 1.0
+    norm: "weight_norm" # Normalization type
+    norm_params: {}
+        
+    # Training parameters
+    learning_rate: 0.0001 # Base learning rate
+    dropout: 0.3 #Dropout rate for classification head
+    
+    # Loss configuration - key feature of dual-loss model
+    loss_type: "focal"
+    classification_weight: 1.0 # Weight for classification loss
+    reconstruction_weight: 0.3 # Weight for reconstruction loss (lower to prioritize classification)
+    contrastive_coef: 0.1
+
+    # Convolution parameters
+    kernel_size: 7 # Initial convolution kernel size
+    last_kernel_size: 7 # Final convolution kernel size
+    causal: false # Non-causal convolutions (can see future)
+    pad_mode: "reflect" # Padding mode
+    trim_right_ratio: 1.0 # For causal convolutions
+    
+    # Optional final activation for decoder
+    final_activation: null # No final activation (linear output)
+    final_activation_params: null
+
+evaluation:
+  # Evaluation-specific settings
+  partition: "test" # "validation" or "test"
+  batch_size: 64 # Smaller batch for evaluation due to memory
+  num_workers: 16
+  use_signal_averaging: true
+  grouped_samples: 100 # More averaging for cleaner evaluation
+  plot_results: true
+  save_plots: true
+  # Additional evaluation metrics for dual-loss model
+  compute_reconstruction_metrics: true # MSE, PSNR for reconstruction quality
+
+submission:
+  # Submission generation settings
+  batch_size: 64 # Conservative batch size
+  num_workers: 32
+  output_path: "./submissions_v3/seanet_dual_phoneme.csv"
+  holdout_task: "phoneme" # Task type for holdout dataset
+  
+# SEANet-specific settings
+architecture:
+  # Advanced SEANet configurations
+  use_lstm_skip: true # Skip connections in LSTM
+  encoder_name: "seanet_brain_encoder"
+  decoder_name: "seanet_brain_decoder"
+  
+  # Experimental features
+  use_attention: false # Future: add attention mechanisms
+  attention_heads: 8
+  
+  # Loss balancing strategies
+  adaptive_loss_weights: false # Future: adaptive weighting
+  loss_warmup_epochs: 5 # Epochs to warm up reconstruction loss
+  
+# Optimization settings specific to dual-loss training
+optimization:
+  # Different learning rates for different components
+  encoder_lr_multiplier: 1.0
+  decoder_lr_multiplier: 1.0
+  classifier_lr_multiplier: 1.5 # Classifier learns slightly faster
+  
+  # Scheduler settings
+  scheduler_type: "cosine_with_warmup"
+  warmup_epochs: 3
+  cosine_T_max: 50
+  eta_min: 1e-6
+  
+  # Regularization
+  weight_decay: 0.01
+  label_smoothing: 0.05 # Light label smoothing
+  
+# Monitoring specific to dual-loss model
+monitoring:
+  # Track both losses separately
+  primary_metric: "val_f1_macro" # Main metric for checkpointing
+  secondary_metrics:
+    - "val_cls_loss"
+    - "val_recon_loss" 
+    - "val_loss"
+  
+  # Loss ratio monitoring
+  log_loss_ratios: true
+  target_cls_recon_ratio: 3.0 # Target ratio of cls_loss/recon_loss

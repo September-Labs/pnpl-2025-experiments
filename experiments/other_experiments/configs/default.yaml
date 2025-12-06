@@ -1,0 +1,94 @@
+# Default configuration for phoneme classification training
+
+data:
+  data_path: "/home/s8l/remote_storage/competitions/libribrain/data/"
+  tmin: 0.0
+  tmax: 0.5
+  use_subset: true  # Set to false for full training data
+  use_signal_averaging: true
+  grouped_samples: 100
+  shuffle_seed: 42  # Random seed for reproducible shuffling in GroupedDataset
+  
+  # Preprocessing options
+  use_preprocessed: false  # Set to true to use preprocessed data (much faster)
+  preprocessed_dir: "/home/s8l/remote_storage/aleks/competitions/libribrain/preprocessed_data"
+  load_to_memory: false  # Load entire dataset to RAM (faster but uses more memory)
+
+training:
+  max_epochs: 15
+  batch_size: 16
+  learning_rate: 0.0005
+  num_workers: 2
+  seed: 42
+  devices: 1
+  accelerator: "auto"
+  gradient_clip_val: null
+  accumulate_grad_batches: 1
+  use_early_stopping: true
+  early_stopping_patience: 5
+  save_dir: "./experiments/phoneme_classification"
+
+logging:
+  log_dir: "./lightning_logs"
+  use_tensorboard: true
+  wandb:
+    project: "libribrain-phoneme-classification"
+    entity: null  # Set to your wandb entity/team name
+    name: null  # Run name, will be auto-generated if null
+    tags: ["phoneme", "classification", "libribrain"]
+    notes: "Phoneme classification training run"
+
+model:
+  # Model selection - specify module path and class name
+  module: "models.architectures.baseline"  # Module containing the model class
+  class: "PhonemeClassificationModel"      # Class name to instantiate
+  
+  # Common parameters passed to all models
+  params:
+    learning_rate: 0.0005
+    
+  # Model-specific configurations (optional, used by specific architectures)
+  baseline_config:
+    # No specific config needed for baseline model
+    
+  cbramod_config:
+    # CBraMod-specific parameters
+    pretrained_path: null  # Path to pretrained weights (optional)
+    freeze_backbone: false  # Whether to freeze pretrained layers
+    patch_size: 200  # Size of patches for CBraMod
+    num_patches: 4  # Number of patches
+    d_model: 200  # Model dimension
+    dim_feedforward: 800  # Feedforward dimension
+    n_layer: 12  # Number of transformer layers
+    nhead: 8  # Number of attention heads
+    dropout: 0.1  # Dropout rate
+    
+  cnn_lstm_config:
+    # CNN-LSTM specific parameters
+    cnn_channels: [64, 128, 256]  # CNN channel progression
+    lstm_hidden: 512  # LSTM hidden size
+    lstm_layers: 2  # Number of LSTM layers
+    
+  transformer_config:
+    # Transformer specific parameters
+    d_model: 512
+    nhead: 8
+    num_encoder_layers: 6
+    dim_feedforward: 2048
+
+evaluation:
+  # Evaluation-specific settings
+  partition: "validation"  # "validation" or "test"
+  batch_size: 16
+  num_workers: 2
+  use_signal_averaging: true
+  grouped_samples: 100
+  plot_results: true
+  save_plots: true
+  
+submission:
+  # Submission generation settings
+  batch_size: 32
+  num_workers: 4
+  output_path: "./submissions/phoneme_submission.csv"
+  holdout_task: "phoneme"  # Task type for holdout dataset

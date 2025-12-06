@@ -1,0 +1,149 @@
+# Simplified MEG Model Configuration
+# Removes all complex components (Conformers, CTC, Zipf, etc.)
+# Focuses only on core architecture that contributes to performance
+
+data:
+  data_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/libribrain/data"
+  tmin: 0.0
+  tmax: 0.5  # 0.5 seconds for 125 time points at 250Hz
+  use_subset: false  # Set to false for full training data
+  use_signal_averaging: true
+  grouped_samples: 100
+  shuffle_seed: 42  # For reproducible shuffling
+  
+  # Preprocessing options
+  use_preprocessed: true  # Use preprocessed data for faster loading
+  preprocessed_dir: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/preprocessed_data_tmax0_5_grouped100"
+  load_to_memory: true  # Load entire dataset to RAM
+
+training:
+  max_epochs: 50  # Can train longer since model is simpler
+  batch_size: 128  # Can use larger batch size with simpler model
+  learning_rate: 0.0001
+  num_workers: 32
+  seed: 42
+  devices: 1
+  accelerator: "gpu"
+  strategy: "auto"
+  gradient_clip_val: 1.0
+  accumulate_grad_batches: 1
+  
+  # Early stopping (optional - can disable for fixed epochs)
+  use_early_stopping: true
+  early_stopping_patience: 15
+  early_stopping_monitor: "val_f1_macro"
+  early_stopping_mode: "max"
+  
+  # Checkpoint settings
+  save_top_k: 5
+  checkpoint_monitor: "val_f1_macro"
+  checkpoint_mode: "max"
+
+logging:
+  log_dir: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/lightning_logs"
+  use_tensorboard: true
+  log_every_n_steps: 50
+  
+  wandb:
+    project: "libribrain-phoneme-classification-v2"
+    entity: "september-labs"
+    name: "linear_meg_081825v2"
+    tags: ["phoneme", "classification", "simplified", "core-only"]
+    notes: "Simplified MEG model with only core components"
+
+model:
+  # Model selection - use the simplified model
+  module: "models.architectures.linear_meg"  # Update path as needed
+  class: "SimplifiedMEGModel"  # Or "UltraSimpleMEGModel" for even simpler version
+  
+  # Model parameters
+  params:
+    # Core architecture
+    meg_channels: 306
+    time_points: 125
+    vocab_size: 39
+    hidden_dim: 512
+    
+    # Training parameters
+    learning_rate: 0.0001
+    weight_decay: 0.1
+    label_smoothing: 0.05  # Reduced from 0.1
+    dropout: 0.1
+    
+    # Encoder configuration
+    use_single_conv: false  # Use only one conv layer
+    conv_kernel_size: 7    # Moderate kernel size
+    use_pooling: true      # Add pooling to reduce dimensions
+    pool_size: 4
+    use_layernorm: true    # More stable than BatchNorm
+    
+    # Classifier configuration
+    classifier_hidden: 256
+    
+    # Optional: Simple class weighting (disabled by default)
+    use_class_weights: false
+    class_weights_path: null
+
+    num_conformers: 4  # Start with just 1
+    conformer_heads: 4  # Minimal heads
+
+evaluation:
+  partition: "test"  # "validation" or "test"
+  batch_size: 128
+  num_workers: 32
+  use_signal_averaging: true
+  grouped_samples: 100
+  plot_results: true
+  save_plots: true
+  
+submission:
+  batch_size: 128
+  num_workers: 32
+  output_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/linear_meg_081825v2_submission.csv"
+  holdout_task: "phoneme"
+
+# # Alternative configurations to try:
+
+# # Configuration 1: Ultra-Simple Model
+# ultra_simple_config:
+#   class: "UltraSimpleMEGModel"
+#   params:
+#     meg_channels: 306
+#     vocab_size: 39
+#     hidden_dim: 256
+#     learning_rate: 0.0001
+#     weight_decay: 0.01
+#     label_smoothing: 0.05
+
+# # Configuration 2: Two-Conv Model (no pooling)
+# two_conv_config:
+#   class: "SimplifiedMEGModel"
+#   params:
+#     meg_channels: 306
+#     vocab_size: 39
+#     hidden_dim: 256
+#     learning_rate: 0.0001
+#     weight_decay: 0.01
+#     label_smoothing: 0.05
+#     dropout: 0.3
+#     use_single_conv: false  # Use two conv layers
+#     use_pooling: false      # No pooling
+#     use_layernorm: false    # Use BatchNorm
+#     classifier_hidden: 512
+
+# # Configuration 3: Global Pooling Model
+# global_pool_config:
+#   class: "SimplifiedMEGModel"
+#   params:
+#     meg_channels: 306
+#     vocab_size: 39
+#     hidden_dim: 512  # Larger hidden dim since we pool
+#     learning_rate: 0.0001
+#     weight_decay: 0.01
+#     label_smoothing: 0.05
+#     dropout: 0.3
+#     use_single_conv: true
+#     conv_kernel_size: 7  # Larger receptive field
+#     use_pooling: false   # Will use global pooling instead
+#     use_global_pooling: true  # Enable in the model code
+#     classifier_hidden: 256  # Smaller since input is smaller

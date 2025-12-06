@@ -1,0 +1,83 @@
+# Configuration for MiSTR-adapted model training
+
+data:
+  data_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/libribrain/data"
+  tmin: 0.0
+  tmax: 0.5  # 0.5 seconds for 125 time points at 250Hz
+  use_subset: false  # Set to true for quick testing with subset
+  use_signal_averaging: true
+  grouped_samples: 100
+  shuffle_seed: 777  # For reproducible shuffling in GroupedDataset
+  
+  # Preprocessing options
+  use_preprocessed: true  # Set to true to use preprocessed data (much faster)
+  preprocessed_dir: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/preprocessed_data_tmax0_5_grouped100"
+  load_to_memory: true  # Load entire dataset to RAM (faster but uses more memory)
+
+training:
+  max_epochs: 50
+  batch_size: 128  # Adjust based on GPU memory
+  learning_rate: 0.0001
+  num_workers: 4
+  seed: 42
+  devices: 1
+  accelerator: "gpu"  # Use "cpu" if no GPU available
+  strategy: "auto"
+  gradient_clip_val: 1.0
+  accumulate_grad_batches: 2  # Effective batch size of 64
+  use_early_stopping: true
+  early_stopping_patience: 20
+  save_dir: "/home/s8l/remote_storage/aleks/competitions/libribrain/models/mistr_phoneme_classification_081125v0"
+
+logging:
+  log_dir: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/lightning_logs"
+  use_tensorboard: true
+  wandb:
+    project: "libribrain-phoneme-classification"
+    entity: "september-labs"  # Replace with your wandb entity/team name
+    name: "mistr_phoneme_classification_081125v0"  # Run name
+    tags: ["phoneme", "classification", "libribrain", "mistr", "wavelet", "transformer"]
+    notes: "MiSTR-adapted model with wavelet encoding, neural compression, and temporal attention"
+
+model:
+  # Model selection - specify module path and class name
+  module: "models.architectures.mistr"  # Module containing the model class
+  class: "MiSTRPhonemeClassifier"               # Class name to instantiate
+  
+  # Common parameters passed to all models
+  params:
+    learning_rate: 0.0001
+    
+  # MiSTR-specific configuration
+  mistr_config:
+    meg_channels: 306           # MEG sensor channels
+    vocab_size: 39              # Number of phoneme classes
+    hidden_dim: 256             # Hidden dimension size
+    latent_dim: 64              # Latent dimension for neural compressor
+    num_transformer_layers: 4    # Number of transformer layers
+    num_attention_heads: 8       # Number of attention heads
+    use_reconstruction_loss: true  # Enable reconstruction loss
+    reconstruction_weight: 0.1     # Weight for reconstruction loss
+    use_contrastive_loss: true     # Enable contrastive learning
+    contrastive_weight: 0.1        # Weight for contrastive loss
+    use_wavelet: true              # Enable wavelet feature extraction
+    wavelet_type: "db4"            # Wavelet type (db4, db8, sym4, etc.)
+    wavelet_level: 4               # Wavelet decomposition level
+    dropout: 0.2                   # Dropout rate
+    
+evaluation:
+  # Evaluation-specific settings
+  partition: "test"  # "validation" or "test"
+  batch_size: 32
+  num_workers: 4
+  use_signal_averaging: true
+  grouped_samples: 100
+  plot_results: true
+  save_plots: true
+  
+submission:
+  # Submission generation settings
+  batch_size: 32
+  num_workers: 4
+  output_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/mistr_phoneme_classification_081125v0_submission.csv"
+  holdout_task: "phoneme"  # Task type for holdout dataset

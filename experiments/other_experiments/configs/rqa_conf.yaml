@@ -1,0 +1,195 @@
+data:
+  data_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/libribrain/data"
+  tmin: 0.0
+  tmax: 0.5  # 125 time points at 250Hz (500ms window)
+  sfreq: 250  # Sampling frequency
+  
+  # Data loading configuration
+  books_train: [1, 2]  # Sherlock books for training
+  books_test: [3]      # Sherlock book for testing
+  max_sessions_per_book: null  # null for all sessions, or specify number
+  sample_size_per_phoneme: 500  # Balance dataset
+  cache_data: true  # Cache data in memory
+  
+  # Train/validation split
+  val_split: 0.15
+  test_split: 0.15
+  
+  # Recurrence plot parameters
+  recurrence:
+    embedding_dim: 10
+    time_delay: 1
+    threshold_percentile: 10
+    n_top_sensors: 50  # Number of most active sensors to use
+    matrix_size: 64    # Fixed size for recurrence matrices
+
+training:
+  max_epochs: 1 
+  batch_size: 32
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  num_workers: 4
+  seed: 42
+  devices: 1
+  accelerator: "gpu"
+  precision: 16
+  strategy: "auto"
+  gradient_clip_val: 1.0
+  accumulate_grad_batches: 1
+  
+  # Early stopping
+  use_early_stopping: true
+  early_stopping_patience: 15
+  early_stopping_monitor: "val_loss"
+  early_stopping_mode: "min"
+  
+  # Learning rate scheduler
+  use_lr_scheduler: true
+  lr_scheduler_factor: 0.5
+  lr_scheduler_patience: 5
+  lr_scheduler_monitor: "val_loss"
+  
+  # Checkpoint settings
+  save_dir: "checkpoints"
+  save_top_k: 3
+  checkpoint_monitor: "val_f1_macro"
+  checkpoint_mode: "max"
+
+model:
+  # Model selection
+  model_type: "hybrid"  # Options: "recurrence" or "hybrid"
+  
+  # Architecture parameters
+  n_channels: 50  # Should match recurrence.n_top_sensors
+  matrix_size: 64
+  n_sensors: 306  # Total MEG sensors (for hybrid model)
+  time_points: 125  # 500ms at 250Hz
+  num_classes: 39  # Standard phoneme classes
+  
+  # Network parameters
+  hidden_dim: 256
+  dropout: 0.3
+  
+  # Recurrence-only model specific
+  recurrence_model:
+    use_gap: false  # Use global average pooling
+    conv_filters: [64, 128, 256]
+    kernel_sizes: [5, 3, 3]
+    pool_sizes: [2, 2, 2]
+  
+  # Hybrid model specific
+  hybrid_model:
+    # Recurrence branch
+    recurrence_filters: [64, 128]
+    recurrence_kernels: [5, 3]
+    recurrence_output_size: 4  # AdaptiveAvgPool2d output
+    
+    # Temporal branch
+    temporal_filters: [128, 64]
+    temporal_kernels: [5, 3]
+    temporal_output_size: 16  # AdaptiveAvgPool1d output
+    
+    # Classifier
+    combined_hidden: 512  # Hidden dim for combined features
+
+logging:
+  use_tensorboard: true
+  log_dir: "logs/phoneme_recurrence"
+  log_every_n_steps: 10
+  
+  wandb:
+    use_wandb: false
+    project: "phoneme-recurrence-classification"
+    entity: ""
+    name: "recurrence-hybrid-model"
+    tags: ["phoneme", "recurrence", "meg", "sherlock"]
+    notes: "Phoneme classification using recurrence plots and hybrid architecture"
+
+evaluation:
+  batch_size: 64
+  num_workers: 4
+  plot_results: true
+  save_plots: true
+  plot_dir: "plots"
+  
+  # Visualization settings
+  visualize_recurrence: true
+  n_samples_to_visualize: 6
+  n_sensors_to_visualize: 6
+  
+  # Metrics to track
+  metrics:
+    - "accuracy"
+    - "f1_macro"
+    - "f1_weighted"
+    - "precision_macro"
+    - "recall_macro"
+
+augmentation:
+  # Data augmentation options (optional)
+  use_augmentation: false
+  noise_level: 0.01
+  time_shift_range: [-5, 5]  # samples
+  scale_range: [0.9, 1.1]
+
+optimization:
+  # Advanced optimization settings
+  use_swa: false  # Stochastic Weight Averaging
+  swa_start_epoch: 50
+  swa_lrs: 0.00005
+  
+  use_ema: false  # Exponential Moving Average
+  ema_decay: 0.999
+  
+  use_mixup: false  # Mixup augmentation
+  mixup_alpha: 0.2
+  
+  label_smoothing: 0.1  # Label smoothing factor
+
+debugging:
+  # Debug settings
+  fast_dev_run: false  # Run single batch for debugging
+  overfit_batches: 0  # Set > 0 to overfit on specific batches
+  profile: false  # Profile training performance
+  detect_anomaly: false  # Detect NaN/Inf
+  
+  # Data verification
+  verify_data_loading: true
+  print_phoneme_distribution: true
+  visualize_first_batch: true
+
+paths:
+  # Directory structure
+  base_dir: "."
+  data_dir: "data"
+  output_dir: "outputs"
+  checkpoint_dir: "checkpoints"
+  log_dir: "logs"
+  plot_dir: "plots"
+  
+  # Specific data paths
+  # sensor_coords_file: "data/sensor_xyz.json"
+  
+  # Output files
+  results_file: "results/phoneme_classification_results.json"
+  confusion_matrix_file: "results/confusion_matrix.png"
+  phoneme_mapping_file: "results/phoneme_mapping.json"
+
+# Phoneme-specific settings
+phonemes:
+  # Target phonemes for focused analysis (optional)
+  target_phonemes: ['aa', 'iy', 's', 't', 'n', 'm', 'eh', 'k', 'l', 'r']
+  
+  # Struggling phonemes that need special attention
+  struggling_phonemes: ['er', 'ow', 'uw', 'ng']
+  struggling_weight_boost: 2.0  # Weight multiplier for loss
+  
+  # Phoneme grouping for analysis
+  phoneme_groups:
+    vowels: ['aa', 'ae', 'ah', 'ao', 'aw', 'ay', 'eh', 'er', 'ey', 'ih', 'iy', 'ow', 'oy', 'uh', 'uw']
+    consonants: ['b', 'ch', 'd', 'dh', 'f', 'g', 'hh', 'jh', 'k', 'l', 'm', 'n', 'ng', 'p', 'r', 's', 'sh', 't', 'th', 'v', 'w', 'y', 'z', 'zh']
+    stops: ['p', 'b', 't', 'd', 'k', 'g']
+    fricatives: ['f', 'v', 'th', 'dh', 's', 'z', 'sh', 'zh', 'hh']
+    nasals: ['m', 'n', 'ng']
+    liquids: ['l', 'r']
+    glides: ['w', 'y']

@@ -1,0 +1,173 @@
+# Comprehensive configuration for Integrated PySeizure Phoneme Classifier
+
+data:
+  data_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/libribrain/data"
+  tmin: 0.0
+  tmax: 0.5
+  use_subset: false
+  use_signal_averaging: true
+  grouped_samples: 100
+  shuffle_seed: 777
+
+  use_preprocessed: true
+  preprocessed_dir: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/preprocessed_data_tmax0_5_grouped100"  # Need to regenerate with grouped_samples=25
+  load_to_memory: true
+
+training:
+  max_epochs: 50
+  batch_size: 64
+  num_workers: 32
+  seed: 42
+  devices: 1
+  accelerator: "gpu"
+  strategy: "auto"
+  gradient_clip_val: 1.0
+  accumulate_grad_batches: 1
+  use_early_stopping: true
+  early_stopping_patience: 10
+  save_dir: "/home/s8l/remote_storage/aleks/competitions/libribrain/models/eegnet_081425v1"
+
+logging:
+  use_tensorboard: true
+  wandb:
+    project: "libribrain-phoneme-classification"
+    entity: "september-labs"
+    name: "eegnet_081425v1"
+    tags: ["phoneme", "eegnet", "ensemble"]
+    notes: "EEGNet model with full configurability"
+
+model:
+  module: "models.architectures.eegnet"
+  
+  # Common parameters - these get passed to all models
+  params:
+    meg_channels: 306
+    time_points: 125
+    vocab_size: 39
+    sampling_rate: 250
+  
+  # Model-specific configuration
+  eegnet_config:
+    # Channel selection configuration
+    channel_selection:
+      enabled: true
+      method: "variance"
+      n_channels: 100
+      custom_indices: null
+    
+    # Feature extraction configuration
+    feature_extraction:
+      enabled: true
+      temporal_features:
+        - "mean"
+        - "variance"
+        - "std"
+        - "skewness"
+        - "kurtosis"
+        - "peak_to_peak"
+        - "zero_crossings"
+        - "hjorth_mobility"
+        - "hjorth_complexity"
+        - "min"
+        - "max"
+        - "absolute_area"
+        - "total_energy"
+      
+      frequency_features:
+        - "band_power"
+        - "spectral_centroid"
+        - "peak_frequency"
+        - "spectral_entropy"
+        - "spectral_rolloff"
+      
+      correlation_features:
+        - "mean_correlation"
+        - "max_correlation"
+        - "clustering_coefficient"
+        - "global_efficiency"
+      
+      frequency_bands:
+        delta: [1, 4]
+        theta: [4, 8]
+        alpha: [8, 12]
+        beta: [12, 30]
+        gamma: [30, 45]
+        high_gamma: [65, 80]
+        ripple: [80, 250]
+    
+    # Ensemble configuration
+    ensemble_config:
+      use_eegnet: true
+      use_transformer: true
+      use_feature_classifier: true
+      
+      ensemble_weights:
+        eegnet: 1.0
+        transformer: 1.2
+        feature_classifier: 0.8
+      
+      eegnet_config:
+        temporal_filters: 8
+        temporal_kernel_size: 64
+        depthwise_multiplier: 2
+        pointwise_filters: 16
+        separable_kernel_size: 16
+        dropout_rate: 0.25
+        pool_sizes: [4, 8]
+        activation: "elu"
+      
+      transformer_config:
+        conv_channels: [256, 128, 64]
+        conv_kernels: [5, 3, 3]
+        conv_pool_sizes: [2, 2, 1]
+        conv_dropout: 0.25
+        d_model: 64
+        n_heads: 4
+        n_layers: 2
+        feedforward_dim: 256
+        transformer_dropout: 0.1
+        classifier_hidden: [256, 128]
+        classifier_dropout: 0.5
+      
+      feature_classifier_config:
+        hidden_layers: [512, 256, 128]
+        dropout_rates: [0.5, 0.3, 0.3]
+        activation: "relu"
+        use_batch_norm: true
+    
+    # Training configuration
+    training_config:
+      label_smoothing: 0.1
+      auxiliary_loss_weight: 0.1
+      gradient_clip_val: 1.0
+    
+    # Optimizer configuration
+    optimizer_config:
+      optimizer: "adamw"
+      learning_rate: 0.001  # Use float instead of string
+      weight_decay: 0.0001  # Use float instead of string
+      
+      scheduler: "cosine_annealing_warm_restarts"
+      scheduler_config:
+        T_0: 10
+        T_mult: 2
+        eta_min: 0.000001  # Use float instead of string
+      
+      differential_lr:
+        enabled: true
+        feature_extractor_lr_factor: 0.1
+
+evaluation:
+  partition: "test"
+  batch_size: 64
+  num_workers: 32
+  use_signal_averaging: true
+  grouped_samples: 100
+  plot_results: true
+  save_plots: true
+
+submission:
+  batch_size: 64
+  num_workers: 32
+  output_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/eegnet_081425v1_submission.csv"
+  holdout_task: "phoneme"

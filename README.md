@@ -11,7 +11,10 @@ State-of-the-art MEG phoneme classification model featuring:
 - IPA phonetic feature prediction
 - Supervised contrastive learning
 
-See [experiments/meg-deberta/](experiments/meg-deberta/) for details.
+See [experiments/demega/](experiments/demega/) for details.
+
+### Other Experiments – Non-Demega
+Curated catalog of alternative architectures explored during the competition, including convolutional hybrids, multi-scale RNNs, graph models, CTC and LCS variants, and specialist ensembles. Code and configs are documented in [experiments/other_experiments/](experiments/other_experiments/).
 
 ## Installation
 

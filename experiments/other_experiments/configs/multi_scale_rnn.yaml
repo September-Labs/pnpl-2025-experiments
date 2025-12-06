@@ -1,0 +1,130 @@
+# Multi-Scale RNN MEG Phoneme Classification Configuration
+# Features multi-scale temporal processing, cross-channel attention, and data augmentation
+
+data:
+  data_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/libribrain/data"
+  tmin: 0.0
+  tmax: 0.5  # 0.5 seconds for 125 time points at 250Hz (phoneme constraint)
+  use_subset: false  # Set to false for full training data
+  use_signal_averaging: true
+  grouped_samples: 100  # Group average for better SNR
+  shuffle_seed: 777  # For reproducible shuffling in GroupedDataset
+  
+  # Preprocessing options
+  use_preprocessed: true  # Set to true to use preprocessed data (much faster)
+  preprocessed_dir: "/scratch2/libribrain_processed/preprocessed_data_tmax0_5_grouped100" #_80_10_10"
+  load_to_memory: true  # Load entire dataset to RAM (faster but uses more memory)
+
+training:
+  max_epochs: 40  # Single stage training
+  batch_size: 32  # Smaller batch for more complex model
+  learning_rate: 0.0005  # Higher LR for RNN-based model
+  num_workers: 32
+  seed: 777
+  devices: 1
+  accelerator: "gpu"
+  strategy: "auto"
+  gradient_clip_val: 1.0
+  accumulate_grad_batches: 2  # Effective batch size of 64
+  use_early_stopping: true
+  early_stopping_patience: 10
+  save_dir: "/home/s8l/remote_storage/aleks/competitions/libribrain/models/multi_scale_rnn_v1"
+  
+  # Checkpoint settings
+  checkpoint:
+    monitor: "val_f1_macro"
+    mode: "max"
+    save_top_k: 3
+    save_last: true
+    verbose: true
+
+logging:
+  log_dir: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/lightning_logs"
+  use_tensorboard: true
+  log_every_n_steps: 50
+  wandb:
+    project: "libribrain-phoneme-classification"
+    entity: "september-labs"  # Set to your wandb entity/team name
+    name: "multi_scale_rnn_090825v0"  # Run name
+    tags: ["phoneme", "classification", "libribrain", "multi-scale", "rnn", "cross-channel"]
+    notes: "Multi-scale RNN with cross-channel features and spectral-temporal processing"
+
+model:
+  # Model selection - specify module path and class name
+  module: "models.architectures.multi_scale_rnn"  # Module containing the model
+  class: "MultiScaleRNNClassifier"                 # Class name to instantiate
+  
+  # Model architecture parameters
+  params:
+    # Core dimensions
+    meg_channels: 306      # MEG sensor channels
+    time_points: 125       # Will be overridden by script but included for clarity
+    vocab_size: 39         # Number of phoneme classes
+    
+    # Multi-scale temporal features
+    temporal_scales: [8, 16, 32, 64]  # Different temporal window sizes (in samples)
+    scale_hidden_dims: [32, 48, 64, 80]  # Hidden dims for each scale
+    
+    # RNN architecture
+    rnn_type: "LSTM"       # LSTM or GRU
+    rnn_hidden_dim: 128    # Main RNN hidden dimension
+    rnn_num_layers: 3      # Number of RNN layers
+    bidirectional: true    # Bidirectional RNN
+    
+    # Cross-channel features
+    use_cross_channel: true  # Enable cross-channel processing
+    channel_groups: 6         # Number of channel groups for cross-channel attention
+    cross_channel_dim: 64    # Dimension for cross-channel features
+    
+    # Spectral-temporal features
+    use_spectral_features: true  # Enable spectral feature extraction
+    num_freq_bins: 20            # Number of frequency bins for spectral analysis
+    freq_min: 1.0                # Minimum frequency (Hz)
+    freq_max: 40.0               # Maximum frequency (Hz)
+    
+    # Data augmentation
+    augmentation:
+      enable: true
+      noise_level: 0.05       # Gaussian noise std
+      time_jitter: 0.02       # Time jitter range (fraction of window)
+      channel_dropout: 0.1    # Random channel dropout probability
+      time_masking: 0.1       # Time masking probability
+      freq_masking: 0.1       # Frequency masking probability (for spectral features)
+    
+    # Scale weighting mechanism (inspired by NVIDIA diarization)
+    scale_weighting: "attention"  # "attention", "learned", or "fixed"
+    scale_attention_dim: 64       # Dimension for scale attention mechanism
+    
+    # Training parameters
+    learning_rate: 0.0005      # Base learning rate
+    weight_decay: 0.01         # L2 regularization
+    dropout_rate: 0.2          # Dropout rate
+    label_smoothing: 0.1       # Label smoothing
+    
+    # Loss configuration
+    loss_type: "focal"         # Use focal loss for class imbalance
+    focal_gamma: 2.0          # Focal loss gamma parameter
+    
+    # Learning rate schedule
+    warmup_epochs: 3          # Linear warmup epochs
+    scheduler_type: "cosine"  # "cosine" or "step"
+    
+    # Feature fusion
+    fusion_method: "weighted_sum"  # "concat", "weighted_sum", or "attention"
+
+evaluation:
+  # Evaluation-specific settings
+  partition: "test"  # "validation" or "test"
+  batch_size: 64
+  num_workers: 16
+  use_signal_averaging: true
+  grouped_samples: 100  # More averaging for cleaner evaluation
+  plot_results: true
+  save_plots: true
+
+submission:
+  # Submission generation settings
+  batch_size: 64
+  num_workers: 32
+  output_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/submissions/multi_scale_rnn_090825v0_submission.csv"
+  holdout_task: "phoneme"  # Task type for holdout dataset

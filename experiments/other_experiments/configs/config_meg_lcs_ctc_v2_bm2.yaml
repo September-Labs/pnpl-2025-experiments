@@ -1,0 +1,169 @@
+# Configuration for Enhanced MEG LCS-CTC model training
+# Full configuration with all enhancement options
+
+data:
+  data_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/libribrain/data"
+  tmin: 0.0
+  tmax: 0.5
+  use_subset: false  # Set to false for full training data
+  use_signal_averaging: true
+  grouped_samples: 100  # Reduced from 100 for more training samples
+  shuffle_seed: 777  # For reproducible shuffling in GroupedDataset
+  
+  # Preprocessing options
+  use_preprocessed: true  # Set to true to use preprocessed data (much faster)
+  preprocessed_dir: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/preprocessed_data_tmax0_5_grouped100"
+  load_to_memory: true  # Load entire dataset to RAM (faster but uses more memory)
+
+training:
+  max_epochs: 100  # Increased from 30 for better convergence with enhancements
+  batch_size: 128 #was64 # Keep same as original
+  learning_rate: 0.00001  # Base learning rate (OneCycleLR will modulate this)
+  num_workers: 64
+  seed: 777
+  devices: 1
+  accelerator: "gpu"
+  strategy: "auto"
+  gradient_clip_val: 2.0
+  accumulate_grad_batches: 2  # Increased for effective batch size of 32
+  use_early_stopping: false
+  early_stopping_patience: 15  # Slightly reduced from 20 for faster iteration
+  label_smoothing: 0.95
+  use_swa: true # Stochastic Weight Averaging (SWA)
+  swa_lrs: 0.001
+  save_dir: "/home/s8l/remote_storage/aleks/competitions/libribrain/models/bm_meg_lcs_ctc_v2_081225v1_swa_heavy_label_smooth"
+
+logging:
+  log_dir: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/lightning_logs"
+  use_tensorboard: true
+  wandb:
+    project: "libribrain-phoneme-classification"
+    entity: september-labs
+    name: "bm_meg_lcs_ctc_v2_081225v2_extreme_label_smooth"
+    tags: ["phoneme", "classification", "libribrain", "enhanced-lcs-ctc", "conformer", "moe", "contrastive", "multiscale"]
+    notes: "Enhanced MEG LCS-CTC with multi-scale encoding, MoE, contrastive learning, and enhanced conformers"
+
+model:
+  # Model selection - using enhanced version
+  module: "models.architectures.meg_lcs_ctc_v2"  # Enhanced module path
+  class: "MEGLCSCTC"                          # Same class name for compatibility
+  
+  # Common parameters passed to all models
+  params:
+    learning_rate: 0.00001
+    
+  # Enhanced LCS-CTC configuration with all options
+  enhanced_lcs_config:
+    # Basic architecture parameters
+    meg_channels: 306      # MEG sensor channels
+    vocab_size: 39         # Number of phoneme classes
+    hidden_dim: 1024        # Hidden dimension size
+    num_conformers: 4      # Increased from 4 for enhanced model
+    
+    # Original features (kept for compatibility)
+    use_alignment: true    # Use alignment learning with CTC
+    zipf_weights: true     # Use enhanced Zipf weights
+    zipf_alpha: 0.99       # Zipf EMA decay factor
+    zipf_boost_factor: 0.5 # How much to boost predictions (0.3 = 30%)
+    
+    # Enhanced features (new)
+    use_multiscale: true   # Multi-scale temporal processing (1ms, 3ms, 10ms, 25ms)
+    use_moe: true          # Mixture of Experts for phoneme types
+    num_experts: 20         # Number of experts (vowels, plosives, fricatives, nasals/liquids)
+    use_contrastive: true  # Contrastive phoneme learning
+    contrastive_weight: 0.4  # Weight for contrastive loss
+    use_enhanced_conformers: true  # Use enhanced Conformer blocks with GLU
+    
+    # Regularization and training
+    dropout: 0.7           # Base dropout rate
+    warmup_steps: 100     # Warmup steps for OneCycleLR
+    
+    # Advanced options (optional)
+    use_skip_connections: true  # Skip connections every 2 layers
+    skip_connection_weight: 0.4  # Weight for skip connections
+    
+    # Loss weights (for curriculum learning)
+    initial_ctc_weight: 0.2     # Starting CTC loss weight
+    final_ctc_weight: 0.5       # Final CTC loss weight
+    ctc_warmup_epochs: 5       # Epochs to reach final CTC weight
+    
+    # MoE specific settings
+    moe_load_balance_alpha: 0.05  # Load balancing loss weight for MoE
+    moe_weight_in_final: 0.6       # Weight of MoE predictions in final output
+    
+    # Contrastive learning settings
+    contrastive_temperature: 0.07  # Temperature for contrastive loss
+    prototype_dim: 256             # Dimension of phoneme prototypes
+    
+    # Zipf enhancement settings
+    use_transition_matrix: true    # Learn phoneme transition probabilities
+    transition_weight: 0.2         # Weight for transition probabilities
+    context_window: 5              # Context window for Zipf modulation
+    
+evaluation:
+  # Evaluation-specific settings
+  partition: "test"  # "validation" or "test"
+  batch_size: 32
+  num_workers: 64
+  use_signal_averaging: true
+  grouped_samples: 100  # Use more averaging for evaluation
+  plot_results: true
+  save_plots: true
+  
+  # Enhanced evaluation options
+  evaluate_without_zipf: true   # Also evaluate without Zipf boosting
+  evaluate_per_expert: true     # Analyze MoE expert usage
+  confusion_matrix: true        # Generate confusion matrix
+  phoneme_analysis: true        # Detailed per-phoneme analysis
+  
+submission:
+  # Submission generation settings
+  batch_size: 32
+  num_workers: 64
+  output_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/meg_lcs_ctc_081225v1_submission.csv"
+  holdout_task: "phoneme"  # Task type for holdout dataset
+  
+  # Enhanced submission options
+  use_ensemble: false         # Ensemble multiple checkpoints
+  ensemble_checkpoints: 3     # Number of best checkpoints to ensemble
+  use_tta: false             # Test-time augmentation
+  tta_augmentations: 5       # Number of augmentations for TTA
+
+# Additional experimental settings (optional)
+experimental:
+  # Mixed precision training
+  use_mixed_precision: true
+  precision: "bf16-mixed"  # or "bf16-mixed" if supported
+  
+  # Advanced data augmentation during training
+  augmentation:
+    temporal_masking: true
+    mask_ratio: 0.15
+    channel_dropout: true
+    channel_drop_ratio: 0.3
+    temporal_warping: true
+    warp_factor: 0.2
+    mixup: true
+    mixup_alpha: 0.2
+    cutmix: false  # Alternative to mixup
+    cutmix_alpha: 1.0
+  
+  # Optimization tricks
+  optimization:
+    use_swa: true  # Stochastic Weight Averaging
+    swa_start_epoch: 35
+    swa_lr: 0.00005
+    use_ema: false  # Exponential Moving Average
+    ema_decay: 0.999
+    use_lookahead: false  # Lookahead optimizer
+    lookahead_k: 5
+    lookahead_alpha: 0.5
+  
+  # Model analysis
+  analysis:
+    log_attention_weights: true  # Log attention patterns
+    log_expert_routing: true     # Log MoE routing decisions
+    log_feature_norms: true      # Track feature magnitudes
+    log_gradient_norms: true     # Monitor gradient flow
+    save_embeddings: false       # Save phoneme embeddings for visualization
+    

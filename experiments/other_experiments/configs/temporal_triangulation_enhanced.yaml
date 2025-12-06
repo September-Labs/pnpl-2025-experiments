@@ -1,0 +1,108 @@
+# Enhanced Temporal Triangulation with Transition Modeling
+# Captures phoneme bleed-over and uses transition probabilities to boost predictions
+
+data:
+  data_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/libribrain/data"
+  tmin: 0.0
+  tmax: 0.5  # 0.5 seconds for 125 time points at 250Hz
+  use_subset: false  # Set to false for full training data
+  use_signal_averaging: true
+  grouped_samples: 100  # Group average for better SNR
+  shuffle_seed: 777  # For reproducible shuffling in GroupedDataset
+  
+  # Preprocessing options
+  use_preprocessed: true  # Set to true to use preprocessed data (much faster)
+  preprocessed_dir: "/scratch2/libribrain_processed/preprocessed_data_tmax0_5_grouped100_80_10_10"
+  load_to_memory: true  # Load entire dataset to RAM (faster but uses more memory)
+
+training:
+  max_epochs: 300  # Extended training for transition learning
+  batch_size: 48
+  learning_rate: 0.0003  # Base learning rate
+  num_workers: 32
+  seed: 777
+  devices: 1
+  accelerator: "gpu"
+  strategy: "auto"
+  gradient_clip_val: 0.5
+  accumulate_grad_batches: 3
+  use_early_stopping: false  # No early stopping as per successful config
+  early_stopping_patience: 15
+  save_dir: "/home/s8l/remote_storage/aleks/competitions/libribrain/models/temporal_triangulation_enhanced_090825v0"
+  
+  # Checkpoint settings
+  checkpoint:
+    monitor: "val_f1_macro"
+    mode: "max"
+    save_top_k: 3
+    save_last: true
+    verbose: true
+
+logging:
+  log_dir: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/lightning_logs"
+  use_tensorboard: true
+  log_every_n_steps: 50
+  wandb:
+    project: "libribrain-phoneme-classification"
+    entity: "september-labs"  # Set to your wandb entity/team name
+    name: "temporal_triangulation_enhanced_090825v0"  # Run name
+    tags: ["phoneme", "classification", "libribrain", "temporal-triangulation", "transition-model", "boundary-aware"]
+    notes: "Enhanced temporal triangulation with phoneme transition modeling and boundary awareness for bleed-over effects"
+
+model:
+  # Model selection - specify module path and class name
+  module: "models.architectures.temporal_triangulation_enhanced"  # Enhanced model with transition modeling
+  class: "EnhancedTemporalTriangulationMEGClassifier"              # Enhanced class name
+  
+  # Model architecture parameters (based on successful demega config)
+  params:
+    # Core dimensions
+    meg_channels: 306      # MEG sensor channels
+    time_points: 125       # Will be overridden by script but included for clarity
+    vocab_size: 39         # Number of phoneme classes
+    hidden_dim: 64         # Hidden dimension size
+    
+    # Architecture choices
+    use_conformer: true    # Use Conformer with DeBERTa attention
+    num_conformers: 8      # Number of Conformer layers (split between shared and temporal-specific)
+    norm_type: "pre"       # Pre-layer normalization
+    
+    # Training parameters
+    learning_rate: 0.0003  # Base learning rate
+    classifier_lr_multiplier: 1.0  # Classifier learns at same rate
+    
+    # Loss configuration
+    loss_type: "focal"     # Use focal loss for class imbalance
+    focal_gamma: 4.5       # Focal loss gamma parameter (from successful config)
+    temperature: 8.0       # Temperature for class reweighting (from successful config)
+    
+    # Regularization
+    dropout_rate: 0.02     # Lower dropout rate (from successful config)
+    label_smoothing: 0.0   # No label smoothing (from successful config)
+    weight_decay: 0.0      # No weight decay (from successful config)
+    
+    # Learning rate schedule
+    warmup_epochs: 5       # Linear warmup epochs
+    total_epochs: 300      # Total epochs for cosine schedule
+    
+    # Enhanced features
+    use_transition_model: true  # Enable phoneme transition modeling
+    boundary_size: 20           # Time points at boundaries (40ms at 250Hz)
+    use_swa: false             # No stochastic weight averaging
+
+evaluation:
+  # Evaluation-specific settings
+  partition: "test"  # "validation" or "test"
+  batch_size: 64
+  num_workers: 16
+  use_signal_averaging: true
+  grouped_samples: 100  # More averaging for cleaner evaluation
+  plot_results: true
+  save_plots: true
+
+submission:
+  # Submission generation settings
+  batch_size: 64
+  num_workers: 32
+  output_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/submissions/temporal_triangulation_enhanced_090825v0_submission.csv"
+  holdout_task: "phoneme"  # Task type for holdout dataset

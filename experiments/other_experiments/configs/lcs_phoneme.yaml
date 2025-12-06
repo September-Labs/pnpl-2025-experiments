@@ -1,0 +1,89 @@
+# Configuration for Enhanced MEG Model - Compatible with existing train.py
+# Save as: configs/enhanced_meg_config.yaml
+
+data:
+  data_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/libribrain/data"
+  tmin: 0.0
+  tmax: 0.5  # 0.5 seconds for 125 time points at 250Hz
+  use_subset: false
+  use_signal_averaging: true
+  grouped_samples: 100
+  shuffle_seed: 777
+  
+  # Preprocessing options
+  use_preprocessed: true
+  preprocessed_dir: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/preprocessed_data_tmax0_5_grouped100"
+  load_to_memory: true
+
+training:
+  max_epochs: 50
+  batch_size: 32
+  learning_rate: 0.00005
+  num_workers: 16
+  seed: 777
+  devices: 1
+  accelerator: "gpu"
+  strategy: "auto"
+  gradient_clip_val: 1.0
+  accumulate_grad_batches: 1  # Effective batch size of 32
+  use_early_stopping: true
+  early_stopping_patience: 15
+  use_swa: false
+  swa_lrs: 1e-5
+  save_dir: "/home/s8l/remote_storage/aleks/competitions/libribrain/models/lcs_phoneme_082025v0"
+  label_smoothing: 0.1  # Will be passed to model
+
+logging:
+  log_dir: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/lightning_logs"
+  use_tensorboard: true
+  wandb:
+    project: "libribrain-phoneme-classification"
+    entity: "september-labs"
+    name: "lcs_phoneme_082025v0"
+    tags: ["phoneme", "classification", "libribrain", "lcs", "phoneme"]
+    notes: "LCS phoneme model"
+
+model:
+  # Model selection - this is what train.py expects
+  module: "models.architectures.lcs_phoneme"  # Path to the module
+  class: "EnhancedMEGModel"                     # Class name
+  
+  # Common parameters - these get passed directly to the model
+  params:
+    learning_rate: 0.00005
+    
+  # Model-specific configuration
+  # This key must be {model_type}_config where model_type is the last part of module path
+  lcs_phoneme_config:
+    # Core architecture parameters
+    meg_channels: 306
+    vocab_size: 39
+    hidden_dim: 512
+    n_experts: 4
+    dropout: 0.2
+    
+    # Training parameters
+    label_smoothing: 0.1
+    use_focal_loss: true
+    focal_gamma: 2.0
+    rare_phoneme_boost: 2.0
+    
+    # Paths to analysis results (update these after running analysis)
+    # These are optional - model will work without them
+    analysis_json_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/meta/sensor_phoneme_analysis_results/sensor_phoneme_analysis.json"
+    phoneme_info_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/phoneme_weights/phoneme_weights.json"
+
+evaluation:
+  partition: "test"
+  batch_size: 64
+  num_workers: 32
+  use_signal_averaging: true
+  grouped_samples: 100
+  plot_results: true
+  save_plots: true
+  
+submission:
+  batch_size: 64
+  num_workers: 32
+  output_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/lcs_phoneme_082025v0_submission.csv"
+  holdout_task: "phoneme"

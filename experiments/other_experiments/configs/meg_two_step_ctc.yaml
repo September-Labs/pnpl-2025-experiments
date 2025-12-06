@@ -1,0 +1,55 @@
+# Stage 1: Train 5-class category classifier
+data:
+  data_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/libribrain/data"
+  tmin: 0.0
+  tmax: 0.5
+  use_subset: false
+  use_signal_averaging: true
+  grouped_samples: 100
+  shuffle_seed: 777
+  use_preprocessed: true
+  preprocessed_dir: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/preprocessed_data_tmax0_5_grouped100_80_10_10"
+  load_to_memory: true
+
+training:
+  max_epochs: 30
+  batch_size: 64
+  learning_rate: 0.00001
+  num_workers: 64
+  seed: 777
+  devices: 1
+  accelerator: "gpu"
+  strategy: "auto"
+  gradient_clip_val: 1.0
+  accumulate_grad_batches: 1
+  use_early_stopping: true
+  early_stopping_patience: 20
+  save_dir: "/home/s8l/remote_storage/aleks/competitions/libribrain/models/meg_sequential_stage1_081225v0"
+
+logging:
+  log_dir: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/lightning_logs"
+  use_tensorboard: true
+  wandb:
+    project: "libribrain-phoneme-classification"
+    entity: september-labs
+    name: "meg_sequential_stage1_081225v0"
+    tags: ["phoneme", "classification", "libribrain", "sequential", "stage1", "category"]
+    notes: "Stage 1: Training 5-class category classifier"
+
+model:
+  module: "models.architectures.meg_two_step_ctc"
+  class: "MEGSequentialTwoStep"
+  
+  params:
+    learning_rate: 0.00001
+    
+  meg_two_step_ctc_config:  # Must match module name
+    meg_channels: 306
+    vocab_size: 39
+    hidden_dim: 256
+    num_temporal_layers: 4
+    use_ctc: true
+    ctc_weight: 0.3
+    training_stage: 1  # Stage 1
+    freeze_backbone_stage2: true
+    # No stage1_checkpoint_path for Stage 1

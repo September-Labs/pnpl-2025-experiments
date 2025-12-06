@@ -1,0 +1,95 @@
+# multiscale_lstm.yaml
+data:
+  data_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/libribrain/data"
+  tmin: 0.0
+  tmax: 0.5  # 0.5 seconds for 125 time points at 250Hz
+  use_subset: false  # Set to false for full training data
+  use_signal_averaging: true
+  grouped_samples: 100  # Group 100 samples for better SNR
+  shuffle_seed: 777  # For reproducible shuffling in GroupedDataset
+  
+  # Preprocessing options
+  use_preprocessed: true  # Set to true to use preprocessed data (much faster)
+  preprocessed_dir: "/scratch2/libribrain_processed/preprocessed_data_tmax0_5_grouped100"
+  load_to_memory: true  # Load entire dataset to RAM (faster but uses more memory)
+
+training:
+  max_epochs: 50
+  batch_size: 32
+  learning_rate: 0.0003
+  weight_decay: 0.01
+  num_workers: 16
+  seed: 777
+  devices: 1
+  accelerator: "gpu"
+  strategy: "auto"
+  gradient_clip_val: 1.0
+  accumulate_grad_batches: 2  # Effective batch size of 64
+  use_early_stopping: true
+  early_stopping_patience: 10
+  label_smoothing: 0.1  # Label smoothing for regularization
+  use_swa: true
+  swa_lrs: 0.0001
+  save_dir: "/home/s8l/remote_storage/aleks/competitions/libribrain/models/multiscale_lstm_082325v0"
+
+logging:
+  log_dir: "/home/s8l/remote_storage/aleks/competitions/libribrain/models/multiscale_lstm_082325v0/logs"
+  use_tensorboard: true
+  wandb:
+    project: "libribrain-phoneme-classification"
+    entity: september-labs  # Set to your wandb entity/team name
+    name: "multiscale_lstm_082325v0"  # Run name
+    tags: ["phoneme", "classification", "libribrain", "multiscale", "lstm", "scale-weighting"]
+    notes: "Multi-scale LSTM with learned scale weighting for MEG phoneme classification"
+
+model:
+  # Model selection - specify module path and class name
+  module: "models.architectures.multiscale_lstm"  # Module containing the model class
+  class: "MultiScaleLSTMPhoneme"                  # Class name to instantiate
+  
+  # Common parameters passed to all models
+  params:
+    n_channels: 306
+    n_classes: 39
+    learning_rate: 0.0003
+    weight_decay: 0.01
+    
+  multiscale_lstm_config:
+    # Multi-scale processing parameters
+    scales: [25, 50, 75, 100, 125]  # Temporal scales in time points (adapted for 125 total)
+    hidden_dims: [256, 384, 512, 640, 768]  # Hidden dimensions for each scale
+    
+    # LSTM configuration
+    num_layers: 2
+    dropout: 0.4
+    bidirectional: true
+    
+    # Scale weighting module
+    scale_weight_hidden_dim: 256
+    scale_weight_reg: 0.1  # Regularization for scale weights
+    
+    # Channel selection (using speech-relevant sensors)
+    use_channel_selection: true
+    n_selected_channels: 64  # Number of channels to select
+    channel_selection_method: "attention"  # "attention", "fixed", or "all"
+    
+    # Custom initialization
+    use_custom_init: true
+    init_method: "xavier"  # "xavier", "kaiming", or "orthogonal"
+    
+evaluation:
+  # Evaluation-specific settings
+  partition: "validation"  # "validation" or "test"
+  batch_size: 64
+  num_workers: 32
+  use_signal_averaging: true
+  grouped_samples: 100
+  plot_results: true
+  save_plots: true
+  
+submission:
+  # Submission generation settings
+  batch_size: 64
+  num_workers: 32
+  output_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/multiscale_lstm_082325v0_submission.csv"
+  holdout_task: "phoneme"  # Task type for holdout dataset

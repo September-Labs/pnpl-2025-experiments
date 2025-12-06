@@ -1,0 +1,154 @@
+# MEG Transformer Phoneme Classification Configuration
+# Full configuration with all hyperparameters exposed
+
+# Data configuration
+data:
+  data_path: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/libribrain/data"
+  tmin: 0.0
+  tmax: 0.5
+  use_subset: false
+  use_signal_averaging: true
+  grouped_samples: 100
+  shuffle_seed: 777
+  use_preprocessed: true
+  preprocessed_dir: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/preprocessed_data_tmax0_5_grouped100"
+  load_to_memory: true
+
+# Training configuration
+training:
+  max_epochs: 100
+  batch_size: 32
+  learning_rate: 0.0001
+  num_workers: 64
+  seed: 777
+  devices: 1
+  accelerator: "gpu"
+  strategy: "auto"
+  gradient_clip_val: 1.0
+  accumulate_grad_batches: 1
+  use_early_stopping: true
+  early_stopping_patience: 20
+  save_dir: "/home/s8l/remote_storage/aleks/competitions/libribrain/models/meg_transformer_phoneme_081425v0"
+
+# Logging configuration
+logging:
+  log_dir: "/home/s8l/aleks/competitions/libribrain/track_2_phoneme_classification/LibriBrain_Competition/track_2_phoneme_classification/lightning_logs"
+  use_tensorboard: true
+  wandb:
+    project: "libribrain-phoneme-classification"
+    entity: "september-labs"
+    name: "meg_transformer_phoneme_081425v0"
+    tags: ["phoneme", "classification", "libribrain", "transformer"]
+    notes: "MEG Transformer with configurable complexity for phoneme classification"
+
+# Model configuration
+model:
+  module: "models.architectures.meg_transformer_phoneme"
+  class: "MEGTransformerPhoneme"
+  
+  params:
+    learning_rate: 0.0001
+    
+  meg_transformer_phoneme_config:  # Must match module name
+    # Architecture parameters
+    num_meg_channels: 306
+    num_phonemes: 39
+    hidden_dim: 256  # Options: 128 (small), 256 (base), 512 (large)
+    
+    # Feature extraction toggles
+    use_channel_groups: true  # Enable/disable magnetometer/gradiometer grouping
+    use_temporal_features: true  # Enable/disable multi-scale temporal features
+    temporal_kernel_sizes: [3, 5, 7, 11]  # Kernel sizes for temporal convolutions
+    
+    # Spatial attention
+    use_spatial_attention: true  # Enable/disable spatial attention across channel groups
+    spatial_attention_heads: 4  # Number of attention heads for spatial attention
+    
+    # Transformer parameters
+    use_transformer: true  # Enable/disable transformer layers
+    num_transformer_layers: 4  # Number of transformer encoder layers
+    transformer_heads: 8  # Number of attention heads in transformer
+    transformer_ff_dim: 1024  # Feed-forward dimension in transformer (null for 4*hidden_dim)
+    
+    # Regularization
+    dropout: 0.2  # General dropout rate
+    channel_dropout: 0.1  # Channel-wise dropout rate (0 to disable)
+    use_batch_norm: true  # Enable/disable batch normalization
+    
+    # Positional encoding
+    use_positional_encoding: true  # Enable/disable sinusoidal positional encoding
+    
+    # Aggregation method
+    aggregate_method: "attention"  # Options: "mean", "max", "attention"
+    
+    # Auxiliary loss
+    use_auxiliary_loss: true  # Enable/disable auxiliary loss with intermediate features
+    auxiliary_loss_weight: 0.3  # Weight for auxiliary loss (0-1)
+    
+    # Optimizer settings
+    optimizer_type: "adamw"  # Options: "adam", "adamw", "sgd"
+    weight_decay: 0.01  # L2 regularization weight
+    
+    # Learning rate scheduler
+    scheduler_type: "onecycle"  # Options: null, "onecycle", "cosine", "reduce"
+    scheduler_params:
+      # OneCycle specific (used when scheduler_type: "onecycle")
+      epochs: 100  # Should match trainer epochs
+      steps_per_epoch: 100  # Will be calculated based on data
+      pct_start: 0.3  # Percentage of cycle for increasing LR
+      anneal_strategy: "cos"  # Options: "cos", "linear"
+      
+      # Cosine specific (used when scheduler_type: "cosine")
+      T_max: 100  # Maximum number of iterations
+      eta_min: 0.0  # Minimum learning rate
+      
+      # ReduceLROnPlateau specific (used when scheduler_type: "reduce")
+      factor: 0.5  # Factor by which LR will be reduced
+      patience: 10  # Number of epochs with no improvement
+      min_lr: 0.0000001  # Minimum learning rate
+    
+    # Data preprocessing
+    force_time_points: 125  # Force input to exactly this many time points
+
+# Configuration presets (examples of different model sizes)
+# To use a preset, copy the values to the meg_transformer_phoneme_config section above
+
+presets:
+  small:
+    hidden_dim: 128
+    num_transformer_layers: 2
+    transformer_heads: 4
+    dropout: 0.1
+    transformer_ff_dim: 512
+    
+  base:
+    hidden_dim: 256
+    num_transformer_layers: 4
+    transformer_heads: 8
+    dropout: 0.2
+    transformer_ff_dim: 1024
+    
+  large:
+    hidden_dim: 512
+    num_transformer_layers: 6
+    transformer_heads: 16
+    dropout: 0.3
+    transformer_ff_dim: 2048
+    
+  simple:  # Minimal configuration without complex features
+    use_channel_groups: false
+    use_temporal_features: false
+    use_spatial_attention: false
+    use_transformer: false
+    use_auxiliary_loss: false
+    use_positional_encoding: false
+    aggregate_method: "mean"
+    
+  full:  # All features enabled (default)
+    use_channel_groups: true
+    use_temporal_features: true
+    use_spatial_attention: true
+    use_transformer: true
+    use_auxiliary_loss: true
+    use_positional_encoding: true
+    aggregate_method: "attention"
